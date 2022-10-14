@@ -1,0 +1,54 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32825.248
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "REAScheduleService", "REAScheduleService.csproj", "{353165C2-E227-4119-828F-798FBB7E6D69}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0DAD2E99-6743-4DD4-B696-71104CC05783} = {0DAD2E99-6743-4DD4-B696-71104CC05783}
+		{788302BF-2D15-4196-8622-F9FD31EE222B} = {788302BF-2D15-4196-8622-F9FD31EE222B}
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReaSchedule.DAL", "..\ReaSchedule.DAL\ReaSchedule.DAL.csproj", "{0DAD2E99-6743-4DD4-B696-71104CC05783}"
+	ProjectSection(ProjectDependencies) = postProject
+		{788302BF-2D15-4196-8622-F9FD31EE222B} = {788302BF-2D15-4196-8622-F9FD31EE222B}
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReaSchedule.Models", "..\ReaSchedule.Models\ReaSchedule.Models.csproj", "{788302BF-2D15-4196-8622-F9FD31EE222B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScheduleWorker", "..\ScheduleWorker\ScheduleWorker.csproj", "{9DB85C63-8C48-4CD6-B1B0-292B80A8293A}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0DAD2E99-6743-4DD4-B696-71104CC05783} = {0DAD2E99-6743-4DD4-B696-71104CC05783}
+		{788302BF-2D15-4196-8622-F9FD31EE222B} = {788302BF-2D15-4196-8622-F9FD31EE222B}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{353165C2-E227-4119-828F-798FBB7E6D69}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{353165C2-E227-4119-828F-798FBB7E6D69}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{353165C2-E227-4119-828F-798FBB7E6D69}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{353165C2-E227-4119-828F-798FBB7E6D69}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0DAD2E99-6743-4DD4-B696-71104CC05783}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0DAD2E99-6743-4DD4-B696-71104CC05783}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0DAD2E99-6743-4DD4-B696-71104CC05783}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0DAD2E99-6743-4DD4-B696-71104CC05783}.Release|Any CPU.Build.0 = Release|Any CPU
+		{788302BF-2D15-4196-8622-F9FD31EE222B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{788302BF-2D15-4196-8622-F9FD31EE222B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{788302BF-2D15-4196-8622-F9FD31EE222B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{788302BF-2D15-4196-8622-F9FD31EE222B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9DB85C63-8C48-4CD6-B1B0-292B80A8293A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9DB85C63-8C48-4CD6-B1B0-292B80A8293A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9DB85C63-8C48-4CD6-B1B0-292B80A8293A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9DB85C63-8C48-4CD6-B1B0-292B80A8293A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {549E8091-AF7E-47FA-8320-E17893CD1504}
+	EndGlobalSection
+EndGlobal
