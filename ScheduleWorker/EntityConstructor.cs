@@ -5,7 +5,7 @@ namespace ScheduleWorker
 {
     public interface IEntityConstructor
     {
-        List<ReaClass> ReaClassConstructor(string modalInfo);
+        List<ReaClass> ConstructReaClass(string modalInfo);
         ScheduleWeek ScheduleWeekConstructor(List<ReaClass> reaClasses);
         ReaGroup ReaGroupConstructor(List<ScheduleWeek> scheduleWeeks);
 
@@ -16,14 +16,14 @@ namespace ScheduleWorker
         private readonly Regex classNameRE = new(@"(?<=(<h5>))((\w+ *)+)");
         private readonly Regex classTypeRE = new(@"(?<=(<strong>))((\w+ *)+)");
         private readonly Regex classSubgroupRE = new(@"(?<=(data-subgroup=.))([a-z0-9A-Zа-яА-Я]+)");
-        private readonly Regex dayOfTheWeekRE = new(@"(?<=(</strong>[\Wa-z]+))([а-я]+)");
+        private readonly Regex dayOfWeekRE = new(@"(?<=(</strong>[\Wa-z]+))([а-я]+)");
         private readonly Regex dateRE = new(@"(?<=,)([0-9 а-я]+)(?=,)");
         private readonly Regex classOrdinalNumberRE = new(@"(?<=,.*)([0-9] [а-я]+)(?= *<br>)");
         private readonly Regex professorRE = new(@"(?<=\?q=)((\w+ *)+)");
         private readonly Regex buildingNumberRE = new(@"(?<=Аудитория:[\\a-z ]+)(\d+ \w+)");
         private readonly Regex AuditionRE = new(@"(?<=\w+ *-[\\n ]+)([0-9а-я//]+)");
         
-        public List<ReaClass> ReaClassConstructor(string classInfo)
+        public List<ReaClass> ConstructReaClass(string classInfo)
         {
             List<ReaClass> reaClasses = new();
             // Checking if the class is combined
@@ -58,14 +58,44 @@ namespace ScheduleWorker
 
         }
 
+        public ScheduleWeek ConstructScheduleWeek(string[] classInfoArray)
+        {
+            var scheduleWeek = new ScheduleWeek() { Id = 0 };
+            var randomCurrentWeekDate = dateRE.Match(classInfoArray[0]).Value;
+
+            if (randomCurrentWeekDate == null)
+                throw new ArgumentNullException("Date could not be found");
+
+            var tryGetDate = DateOnly.TryParse(randomCurrentWeekDate, out var existingCurrentWeekDate);
+
+            if (tryGetDate) { 
+                scheduleWeek.WeekStart = existingCurrentWeekDate.GetWeekStart();
+                scheduleWeek.WeekEnd = existingCurrentWeekDate.GetWeekEnd();
+            }
+
+            foreach (var classInfo in classInfoArray)
+            {
+                var dayOfWeek = dayOfWeekRE.Match(classInfo).Value.ToLower().Replace(" ", "");
+
+                foreach (var prop in scheduleWeek.GetType().GetProperties().OfType<ScheduleDay>())
+                {
+                    prop.Date = existingCurrentWeekDate.GetDateByDayOfWeek(prop.DayOfWeekName);
+
+                    if (prop.DayOfWeekName == dayOfWeek) 
+                    {
+                        prop.ReaClasses.Concat(ConstructReaClass(classInfo));
+                    }
+                }
+            }
+
+            return scheduleWeek;
+            
+
+        }
         public ReaGroup ReaGroupConstructor(List<ScheduleWeek> scheduleWeeks)
         {
             throw new NotImplementedException();
         }
 
-        public ScheduleWeek ScheduleWeekConstructor(List<ReaClass> reaClasses)
-        {
-            throw new NotImplementedException();
-        }
     }
 }
