@@ -10,25 +10,36 @@ namespace ScheduleWorker
     {
         public static int GetWeekNumber(this DateTime dateTime)
         {
-            DateOnly today = DateOnly.FromDateTime(DateTime.Now);
-            DateOnly firstOfSeptember = new DateOnly(today.Year, 9, 1);
+            DateOnly today = DateOnly.FromDateTime(dateTime);
+            return today.GetWeekNumber();
 
-            var currentWeekStart = GetWeekStart(today);
+        }
+        
+        public static int GetWeekNumber(this DateOnly date)
+        {
+            DateOnly firstOfSeptember = new(date.Year, 9, 1);
+
+            var currentWeekStart = GetWeekStart(date);
             var firstWeekStart = GetWeekStart(firstOfSeptember);
 
-            int weekNumber = (currentWeekStart.Day - firstWeekStart.Day - 1)/7 + 1;
+            TimeSpan timeSpan = (currentWeekStart.ToDateTime(new TimeOnly()) 
+                - firstWeekStart.ToDateTime(new TimeOnly()));
+            int weekNumber = (timeSpan.Days) / 7 + 1;
 
             return weekNumber;
 
         }
         public static DateOnly GetWeekStart(this DateOnly date) 
         {
-            int dayDifference = 0;
             int dateDayOfWeek = (int)date.DayOfWeek;
 
-            if (dateDayOfWeek < 1) { dayDifference = 1; }
-            else if (dateDayOfWeek == 1) { dayDifference = 0; }
-            else { dayDifference = 1 - dateDayOfWeek; };
+            int dayDifference;
+            if (dateDayOfWeek < 1)
+                dayDifference = 1;
+            else if (dateDayOfWeek == 1)
+                dayDifference = 0;
+            else
+                dayDifference = 1 - dateDayOfWeek;
 
             var weekStartDate = date.AddDays(dayDifference);
 
@@ -41,8 +52,10 @@ namespace ScheduleWorker
             int dayDifference = 0;
             int dateDayOfWeek = (int)date.DayOfWeek;
 
-            if (dateDayOfWeek < 1) { dayDifference = 0; }
-            else { dayDifference = 7 - dateDayOfWeek; };
+            if (dateDayOfWeek < 1)
+                dayDifference = 0;
+            else
+                dayDifference = 7 - dateDayOfWeek;
 
             var weekEndDate = date.AddDays(dayDifference);
 
@@ -80,5 +93,6 @@ namespace ScheduleWorker
             return outputDate;
 
         }
+       
     }
 }

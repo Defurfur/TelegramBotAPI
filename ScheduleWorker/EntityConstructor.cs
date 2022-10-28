@@ -5,9 +5,10 @@ namespace ScheduleWorker
 {
     public interface IEntityConstructor
     {
-        List<ReaClass> ConstructReaClass(string modalInfo);
-        ScheduleWeek ScheduleWeekConstructor(List<ReaClass> reaClasses);
-        ReaGroup ReaGroupConstructor(List<ScheduleWeek> scheduleWeeks);
+        List<ScheduleWeek> ConstructScheduleWeeks(List<string> classInfoArray);
+        ReaGroup ConstructReaGroup(
+            ReaGroup reaGroup,
+            List<ScheduleWeek> scheduleWeeks);
 
     }
 
@@ -23,7 +24,7 @@ namespace ScheduleWorker
         private readonly Regex buildingNumberRE = new(@"(?<=Аудитория:[\\a-z ]+)(\d+ \w+)");
         private readonly Regex AuditionRE = new(@"(?<=\w+ *-[\\n ]+)([0-9а-я//]+)");
         
-        public List<ReaClass> ConstructReaClass(string classInfo)
+        private List<ReaClass> ConstructReaClass(string classInfo)
         {
             List<ReaClass> reaClasses = new();
             // Checking if the class is combined
@@ -53,48 +54,74 @@ namespace ScheduleWorker
 
             return reaClasses;
 
-            //Поменять функцию джаваскрипта, чтобы она правильно возвращала айдишники сдвоенных уроков
-
-
         }
 
-        public ScheduleWeek ConstructScheduleWeek(string[] classInfoArray)
+        public List<ScheduleWeek> ConstructScheduleWeeks(List<string> classInfoArray) 
         {
-            var scheduleWeek = new ScheduleWeek() { Id = 0 };
-            var randomCurrentWeekDate = dateRE.Match(classInfoArray[0]).Value;
-
-            if (randomCurrentWeekDate == null)
-                throw new ArgumentNullException("Date could not be found");
-
-            var tryGetDate = DateOnly.TryParse(randomCurrentWeekDate, out var existingCurrentWeekDate);
-
-            if (tryGetDate) { 
-                scheduleWeek.WeekStart = existingCurrentWeekDate.GetWeekStart();
-                scheduleWeek.WeekEnd = existingCurrentWeekDate.GetWeekEnd();
-            }
+            var lastDayOfCurrentWeek = getDate(dateRE.Match(classInfoArray[0]).Value).GetWeekEnd();
+            var scheduleWeekArray = new List<ScheduleWeek>() { 
+                new ScheduleWeek() {Id = 0 } 
+            };
 
             foreach (var classInfo in classInfoArray)
             {
-                var dayOfWeek = dayOfWeekRE.Match(classInfo).Value.ToLower().Replace(" ", "");
+                var classDate = getDate(dateRE.Match(classInfo).Value).GetWeekEnd();
 
-                foreach (var prop in scheduleWeek.GetType().GetProperties().OfType<ScheduleDay>())
-                {
-                    prop.Date = existingCurrentWeekDate.GetDateByDayOfWeek(prop.DayOfWeekName);
+                if (classDate.CompareTo(lastDayOfCurrentWeek) <= 0)
+                    AddClassesToScheduleWeek(scheduleWeekArray.Last(), classInfo);
 
-                    if (prop.DayOfWeekName == dayOfWeek) 
-                    {
-                        prop.ReaClasses.Concat(ConstructReaClass(classInfo));
-                    }
+                else 
+                { 
+                    scheduleWeekArray.Last().WeekStart = lastDayOfCurrentWeek.GetWeekStart();
+                    scheduleWeekArray.Last().WeekEnd = lastDayOfCurrentWeek.GetWeekEnd();
+                    scheduleWeekArray.Add(
+                        new ScheduleWeek() { Id = scheduleWeekArray.Last().Id + 1 }
+                        );
+                    //Add implementation of Hashing function
+                    lastDayOfCurrentWeek = getDate(dateRE.Match(classInfo).Value).GetWeekEnd();
                 }
             }
 
+            return scheduleWeekArray;
+        }
+
+        private ScheduleWeek AddClassesToScheduleWeek(ScheduleWeek scheduleWeek, string classInfo)
+        {
+            var classDate = getDate(dateRE.Match(classInfo).Value);
+            var dayOfWeek = dayOfWeekRE.Match(classInfo).Value.ToLower().Replace(" ", "");
+
+            foreach (var prop in scheduleWeek.GetScheduleDays())
+            {
+                if (prop.DayOfWeekName == dayOfWeek) 
+                {
+                    prop.Date = classDate;
+                    prop.ReaClasses.Concat(ConstructReaClass(classInfo));
+                }
+            }
             return scheduleWeek;
-            
+        }
+        public ReaGroup ConstructReaGroup(
+            ReaGroup reaGroup,
+            List<ScheduleWeek> scheduleWeeks)
+        {
+            var newReaGroup = new ReaGroup() 
+            {
+                Id = 0, 
+                GroupName = reaGroup.GroupName,
+                ScheduleWeeks = scheduleWeeks                
+            };
+
+            return newReaGroup;
 
         }
-        public ReaGroup ReaGroupConstructor(List<ScheduleWeek> scheduleWeeks)
+
+        public static DateOnly getDate(string date)
         {
-            throw new NotImplementedException();
+            DateOnly newDate = new();
+            if (DateOnly.TryParse(date, out var realDate))
+                return realDate;
+            else 
+                return newDate;
         }
 
     }

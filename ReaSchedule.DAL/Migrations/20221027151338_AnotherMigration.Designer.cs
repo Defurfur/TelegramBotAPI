@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ReaSchedule.DAL;
@@ -11,9 +12,10 @@ using ReaSchedule.DAL;
 namespace ReaSchedule.DAL.Migrations
 {
     [DbContext(typeof(ScheduleDbContext))]
-    partial class ScheduleDbContextModelSnapshot : ModelSnapshot
+    [Migration("20221027151338_AnotherMigration")]
+    partial class AnotherMigration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -110,7 +112,7 @@ namespace ReaSchedule.DAL.Migrations
 
                     b.HasIndex("ScheduleWeekId");
 
-                    b.ToTable("ScheduleDays");
+                    b.ToTable("ScheduleDay");
                 });
 
             modelBuilder.Entity("ReaSchedule.Models.ScheduleWeek", b =>

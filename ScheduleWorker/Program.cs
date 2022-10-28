@@ -7,7 +7,7 @@ using PuppeteerSharp;
 
 IHost host = Host.CreateDefaultBuilder(args)
 
-    .ConfigureServices((host, services) =>
+    .ConfigureServices((Action<HostBuilderContext, IServiceCollection>)((host, services) =>
 
     {
 
@@ -49,10 +49,11 @@ IHost host = Host.CreateDefaultBuilder(args)
 
         services.AddHostedService<ScheduleWorker.Worker>();
 
-        services.AddSingleton<IBrowserWrapper, BrowserWrapper>();
-        services.AddSingleton<IScheduleLoader, PuppeteerScheduleLoader>();
+        ServiceCollectionServiceExtensions.AddSingleton<ScheduleWorker.IBrowserWrapper, BrowserWrapper>(services);
+        services.AddSingleton<IScheduleLoader, JsScheduleLoader>();
+        services.AddSingleton<IParserPipeline, ParserPipeline>();
 
-    })
+    }))
 
     .Build();
 

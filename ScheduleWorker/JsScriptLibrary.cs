@@ -9,7 +9,7 @@ namespace ScheduleWorker
 {
     public static class JsScriptLibrary
     {
-        public const string getScheduleFunc = "" +
+        public const string getScheduleFunc = 
             "async function getSchedule(group, week) {" + // fix here too
             "\r\n    var schedule;" +
             "\r\n    await $.ajax({" +
@@ -24,7 +24,7 @@ namespace ScheduleWorker
             "\r\n    return schedule;" +
             "\r\n}";
 
-        public const string getWeeklyClassesById = "" +
+        public const string getWeeklyClassesById = 
             "async function GetWeeklyClassesInfo(e){" +
             "\r\n        var modalInfo;" +
             "\r\n        await $.ajax({" +
@@ -38,7 +38,8 @@ namespace ScheduleWorker
             "\r\n        })" +
             "\r\n    return modalInfo;" +
             "\r\n}";
-        public const string aggregateClassesInfoFunc = "async function aggregateClassesInfo(classList){" +
+        public const string aggregateClassesInfoFunc = 
+            "async function aggregateClassesInfo(classList){" +
             "\r\n    var classesInfo = []; " +
             "\r\n    if (!classList[0].includes(',')){" +
             "\r\n        for (let i = 0; i < classList.length; i++){" +
@@ -57,7 +58,8 @@ namespace ScheduleWorker
             "\r\n    return classesInfo;" +
             "\r\n}";
 
-        public const string getWeeklyClassesByData = "async function GetWeeklyClassesInfoByData(group, date, slot){" +
+        public const string getWeeklyClassesByData = 
+            "async function GetWeeklyClassesInfoByData(group, date, slot){" +
             "\r\n        var modalInfo;" +
             "\r\n        await $.ajax({" +
             "\r\n            url: \"/Schedule/GetDetails\"," +
@@ -92,13 +94,13 @@ namespace ScheduleWorker
         public static string getClassesInfoByData(string group, int week) 
         { 
             string JsPipeline = 
-                $"group = {group};" +
-                $"week = {week}" + 
+                $"group = '{group}';\r\n" +
+                $"week = {week};\r\n" + 
                 getScheduleFunc +
                 getWeeklyClassesById +
                 getWeeklyClassesByData +
                 aggregateClassesInfoFunc +
-                "async function getClassesInfoByDateAndSlot(group, week){" +
+                "\r\nasync function getClassesInfoByDateAndSlot(group, week){" +
                 "\r\n    var schedule = await getSchedule(group, week);" +
                 "\r\n    re = /(?<=&#39;)([0-9.]+&#39;, *&#39;\\d)/gm;" +
                 "\r\n    dirtyArray = schedule.match(re);" +
@@ -109,7 +111,28 @@ namespace ScheduleWorker
                 "\r\n    return classesInfo;" +
                 "\r\n" +
                 "}\r\n" +
-                "await getClassesInfoByDateAndSlot(group, week);";
+                "\r\n getClassesInfoByDateAndSlot(group, week)";
+
+            //string JsPipeline =
+            //    @$"group = {group};
+            //    week = {week}
+            //    getScheduleFunc 
+            //    getWeeklyClassesById 
+            //    getWeeklyClassesByData 
+            //    aggregateClassesInfoFunc 
+            //    async function getClassesInfoByDateAndSlot(group, week){{
+            //        var schedule = await getSchedule(group, week);
+            //        re = /(?<=&#39;)([0-9.]+&#39;, *&#39;\\d)/gm;
+            //        dirtyArray = schedule.match(re);
+            //        DateAndSlotArray = [];
+            //        dirtyArray.forEach(e => {{DateAndSlotArray.push(e.replaceAll(""&#39;"", """"))}});
+            //        var classesInfo = await aggregateClassesInfo(DateAndSlotArray);
+                    
+            //        return classesInfo;
+                
+            //    }}
+            //    await getClassesInfoByDateAndSlot(group, week);";
+
             return JsPipeline;
         }
     }
