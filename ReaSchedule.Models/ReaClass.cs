@@ -10,6 +10,7 @@
         public string Audition { get; set; } = string.Empty;
         public string Professor { get; set; } = string.Empty;
         public string Subgroup { get; set; } = string.Empty;
+        public string ClassElementId { get; set; } = string.Empty;
 
 
     }

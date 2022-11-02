@@ -1,12 +1,12 @@
 ﻿using PuppeteerSharp;
 using ReaSchedule.Models;
 
-namespace ScheduleWorker;
+namespace ScheduleWorker.Services;
 
 
 public interface IScheduleLoader
 {
-    Task<List<string>> LoadPageContentAndParse(
+    Task<List<WeeklyClassesWrapper>> LoadPageContentAndParse(
         int weekCountToParse,
         ReaGroup reaGroup);
 }
@@ -116,31 +116,45 @@ public class JsScheduleLoader : IScheduleLoader
     {
         _browserWrapper = browserWrapper;
     }
-    public async Task<List<string>> LoadPageContentAndParse(
+    public async Task<List<WeeklyClassesWrapper>> LoadPageContentAndParse(
         int weekCountToParse,
         ReaGroup reaGroup)
     {
         var url = _reaWebsiteLink + "?q=" + reaGroup.GroupName.Replace("/", "%2F");
         await using var page = await LoadPageContent(url);
-        var classesInfoArray = new List<string>();
+        var allWeeklyClasses = new List<WeeklyClassesWrapper>();
 
-        for (int i = 1; i <= weekCountToParse; i++) 
+        for (int i = 1; i <= weekCountToParse; i++)
         {
+            int weekNumber = DateTime.Now.GetWeekNumber() + i - 1;
+            WeeklyClassesWrapper weeklyClassesWrapper = new();
+            List<string> weeklyClassesList = new();
 
-            var classesInfoJToken = await page.EvaluateExpressionAsync(
-                JsScriptLibrary.getClassesInfoByData(reaGroup.GroupName,
-                DateTime.Now.GetWeekNumber() + i - 1)
-                );
-        
-            foreach (var classInfo in classesInfoJToken) 
-            { 
-                classesInfoArray.Add(classInfo.ToString());
-            };
+            var classesInfoJToken = await page.EvaluateExpressionAsync
+                (JsScriptLibrary.getClassesInfoByData(
+                    reaGroup.GroupName,
+                    weekNumber));
 
-        
+            if (classesInfoJToken.ToString() == "")
+            {
+                weeklyClassesWrapper.WeekNumber = weekNumber;
+                weeklyClassesWrapper.WeeklyClasses = weeklyClassesList;
+
+                allWeeklyClasses.Add(weeklyClassesWrapper);
+                continue;
+            }
+            
+            foreach (var classInfo in classesInfoJToken)
+                weeklyClassesList.Add(classInfo.ToString());
+
+            weeklyClassesWrapper.WeeklyClasses = weeklyClassesList;
+            weeklyClassesWrapper.WeekNumber = weekNumber;
+
+            allWeeklyClasses.Add(weeklyClassesWrapper);
         }
-        return classesInfoArray;
-        
+
+        return allWeeklyClasses;
+
     }
     private async Task<Page> LoadPageContent(string url)
     {

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using PuppeteerSharp;
 using ReaSchedule.DAL;
 using ReaSchedule.Models;
+using ScheduleWorker.Services;
 
 namespace ScheduleWorker
 
@@ -13,20 +14,20 @@ namespace ScheduleWorker
         private readonly ILogger<Worker> _logger;
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ScheduleDbContext _context;
-        private readonly IParserPipeline _workerPipeline;
+        private readonly IParserPipeline _parserPipeline;
 
         public Worker(
             ILogger<Worker> logger,
             IServiceScopeFactory scopeFactory,
             ScheduleDbContext context,
-            IParserPipeline workerPipeline)
+            IParserPipeline parserPipeline)
 
         {
 
             _logger = logger;
             _scopeFactory = scopeFactory;
             _context = context;
-            _workerPipeline = workerPipeline;
+            _parserPipeline = parserPipeline;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -125,12 +126,27 @@ namespace ScheduleWorker
                 .ReaGroups
                 .Include(x => x.ScheduleWeeks!)
                     .ThenInclude(x => x.ScheduleDays)
-                    .ToListAsync();
+                        .ThenInclude(x => x.ReaClasses)
+                        .AsSplitQuery()
+                        .ToListAsync();
 
             var tasks = reaGroupList
-                .Select(x => _workerPipeline.Execute(x));
+                .Select(x => _parserPipeline.ParseAndUpdate(x));
             var results = await Task.WhenAll(tasks);
-            
+
+            var joinedGroups = reaGroupList.Join(
+                results, 
+                x => x.Id,
+                y => y.Id,
+                (x,y) => (x,y));
+
+            foreach (var (x, y) in joinedGroups)
+            {
+                _context.Entry(x).CurrentValues.SetValues(y);
+                x.ScheduleWeeks = y.ScheduleWeeks;
+            }
+
+            await _context.SaveChangesAsync(ct);
         }
 
     }

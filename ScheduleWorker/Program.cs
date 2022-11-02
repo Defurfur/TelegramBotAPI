@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 
-using ScheduleWorker;
-
 using ReaSchedule.DAL;
 using PuppeteerSharp;
+using ReaSchedule.Models;
+using ScheduleWorker.Services;
 
 IHost host = Host.CreateDefaultBuilder(args)
 
@@ -45,13 +45,17 @@ IHost host = Host.CreateDefaultBuilder(args)
                 " Chrome/102.0.4985.0 Safari/537.36 Edg/102.0.1235.1");
         });
 
-        services.AddSingleton<IEntityConstructor, EntityConstructor>();
+        services.AddSingleton<IEntityUpdater, EntityUpdater>();
 
         services.AddHostedService<ScheduleWorker.Worker>();
 
-        ServiceCollectionServiceExtensions.AddSingleton<ScheduleWorker.IBrowserWrapper, BrowserWrapper>(services);
+        services.AddSingleton<IBrowserWrapper, BrowserWrapper>();
+        //ServiceCollectionServiceExtensions.AddSingleton<IBrowserWrapper, BrowserWrapper>(services); //why was that there
         services.AddSingleton<IScheduleLoader, JsScheduleLoader>();
         services.AddSingleton<IParserPipeline, ParserPipeline>();
+        services.AddSingleton<IReaClassFactory, SimpleReaClassFactory>();
+        services.AddSingleton<IScheduleWeekFactory, ScheduleWeekFactory>();
+        services.AddSingleton<IReaGroupFactory, ReaGroupFactory>();
 
     }))
 

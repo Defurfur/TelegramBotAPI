@@ -94,9 +94,9 @@ public class ScheduleDay : IIdentifyable<int>
     public int Id { get; set; }
     public int ScheduleWeekId { get; set; }
     public ScheduleWeek? ScheduleWeek { get; set; }
-    public DayOfWeek DayOfWeek { get; set; }
+    public DayOfWeek DayOfWeek { get; set; } 
     public string DayOfWeekName { get; set; } = string.Empty;
-    public ICollection<ReaClass> ReaClasses { get; set; } = new List<ReaClass>();
+    public List<ReaClass> ReaClasses { get; set; } = new List<ReaClass>();
     public DateOnly Date { get; set; }
     public bool IsEmpty => !ReaClasses.Any();
 

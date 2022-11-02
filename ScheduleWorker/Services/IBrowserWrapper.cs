@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ScheduleWorker
+namespace ScheduleWorker.Services
 {
     public interface IBrowserWrapper : IAsyncDisposable
     {
@@ -24,7 +24,10 @@ namespace ScheduleWorker
             if (!IsInit)
             {
                 Browser = await Puppeteer.LaunchAsync(
-                    new LaunchOptions { Headless = true, Args = new string[] { "--no-zygote", "--single-process" } });
+                    new LaunchOptions { 
+                        Timeout = 300000,
+                        Headless = true,
+                        Args = new string[] { "--no-zygote", "--no-sandbox", "--single-process" } });
                 IsInit = true;
             }
         }
@@ -33,6 +36,11 @@ namespace ScheduleWorker
         {
             if (IsInit)
             {
+                var pages = await Browser!.PagesAsync();
+                if (pages != null)
+                    foreach (var page in pages)
+                        await page.CloseAsync();
+
                 await Browser!.CloseAsync();
                 await Browser!.DisposeAsync();
                 IsInit = false;
