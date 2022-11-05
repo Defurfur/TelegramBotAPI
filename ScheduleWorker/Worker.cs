@@ -3,6 +3,7 @@ using PuppeteerSharp;
 using ReaSchedule.DAL;
 using ReaSchedule.Models;
 using ScheduleWorker.Services;
+using XAct;
 
 namespace ScheduleWorker
 
@@ -140,10 +141,14 @@ namespace ScheduleWorker
                 y => y.Id,
                 (x,y) => (x,y));
 
-            foreach (var (x, y) in joinedGroups)
+            foreach (var (oldG, newG) in joinedGroups)
             {
-                _context.Entry(x).CurrentValues.SetValues(y);
-                x.ScheduleWeeks = y.ScheduleWeeks;
+                if (oldG.Hash != newG.Hash)
+                {
+                    oldG.ScheduleWeeks = newG.ScheduleWeeks;
+                    oldG.Hash = newG.Hash;
+                }
+                
             }
 
             await _context.SaveChangesAsync(ct);

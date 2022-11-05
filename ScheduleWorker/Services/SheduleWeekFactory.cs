@@ -2,6 +2,7 @@
 using Jint.Parser.Ast;
 using Microsoft.Diagnostics.Tracing.Parsers.MicrosoftWindowsTCPIP;
 using Microsoft.VisualBasic;
+using Newtonsoft.Json;
 using ReaSchedule.Models;
 using System;
 using System.Collections.Generic;
@@ -37,7 +38,8 @@ namespace ScheduleWorker.Services
             var sortedClassInfoArray = _processingClassInfoArray!
                 .Where(x => _dayOfWeekRE.Match(x).Value == scheduleDay.DayOfWeekName)
                 .ToList();
-            if (sortedClassInfoArray == null || !sortedClassInfoArray.Any())
+
+            if (sortedClassInfoArray is null || !sortedClassInfoArray.Any())
             {
                 scheduleDay.Date = DateTimeExtension
                     .GetMondayByWeekNumber(weekNumber)
@@ -51,8 +53,7 @@ namespace ScheduleWorker.Services
                 scheduleDay.Date = DateTimeExtension.GetDate(firstClassDateAsString);
                 scheduleDay.ReaClasses = _reaClassFactory.CreateFromList(sortedClassInfoArray!);
 
-                if (_processingClassInfoArray.Any())
-                    _processingClassInfoArray.RemoveAll(x => sortedClassInfoArray!.Contains(x));
+                _processingClassInfoArray.RemoveAll(x => sortedClassInfoArray!.Contains(x));
             }
 
 

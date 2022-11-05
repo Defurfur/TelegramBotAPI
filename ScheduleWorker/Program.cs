@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-
 using ReaSchedule.DAL;
 using PuppeteerSharp;
 using ReaSchedule.Models;
@@ -50,12 +49,12 @@ IHost host = Host.CreateDefaultBuilder(args)
         services.AddHostedService<ScheduleWorker.Worker>();
 
         services.AddSingleton<IBrowserWrapper, BrowserWrapper>();
-        //ServiceCollectionServiceExtensions.AddSingleton<IBrowserWrapper, BrowserWrapper>(services); //why was that there
         services.AddSingleton<IScheduleLoader, JsScheduleLoader>();
         services.AddSingleton<IParserPipeline, ParserPipeline>();
         services.AddSingleton<IReaClassFactory, SimpleReaClassFactory>();
         services.AddSingleton<IScheduleWeekFactory, ScheduleWeekFactory>();
         services.AddSingleton<IReaGroupFactory, ReaGroupFactory>();
+        services.AddSingleton<IHashingService, HashingService>();
 
     }))
 

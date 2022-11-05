@@ -1,6 +1,7 @@
 ﻿using PuppeteerSharp;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -43,8 +44,22 @@ namespace ScheduleWorker.Services
 
                 await Browser!.CloseAsync();
                 await Browser!.DisposeAsync();
+
+                KillChromiumProcesses();
+
                 IsInit = false;
             }
         }
+
+        private void KillChromiumProcesses()
+        {
+            Process[] processes = Process.GetProcessesByName("chrome");
+
+            if(processes.Any() && processes != null)
+                foreach (var process in processes)
+                    process.Kill(true);
+
+        }
     }
 }
+

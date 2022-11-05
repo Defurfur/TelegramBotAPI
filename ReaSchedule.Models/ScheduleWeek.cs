@@ -85,7 +85,6 @@ public class ScheduleWeek : IIdentifyable<int>
     {
         return ScheduleDays;
     }
-
 }
 
 public class ScheduleDay : IIdentifyable<int>

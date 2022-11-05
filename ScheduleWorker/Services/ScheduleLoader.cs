@@ -135,17 +135,12 @@ public class JsScheduleLoader : IScheduleLoader
                     reaGroup.GroupName,
                     weekNumber));
 
-            if (classesInfoJToken.ToString() == "")
+            if (classesInfoJToken.ToString() != "")
             {
-                weeklyClassesWrapper.WeekNumber = weekNumber;
-                weeklyClassesWrapper.WeeklyClasses = weeklyClassesList;
-
-                allWeeklyClasses.Add(weeklyClassesWrapper);
-                continue;
+                foreach (var classInfo in classesInfoJToken)
+                    weeklyClassesList.Add(classInfo.ToString());
             }
             
-            foreach (var classInfo in classesInfoJToken)
-                weeklyClassesList.Add(classInfo.ToString());
 
             weeklyClassesWrapper.WeeklyClasses = weeklyClassesList;
             weeklyClassesWrapper.WeekNumber = weekNumber;
