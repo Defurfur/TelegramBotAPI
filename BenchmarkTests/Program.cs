@@ -9,7 +9,8 @@ using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
 
-//var builder = new BuilderBenchmarkTest();
+Console.WriteLine("booba");
+;//var builder = new BuilderBenchmarkTest();
 //Console.WriteLine("result of ReflectionBuilder:" + $"{JsonConvert.SerializeObject(builder.CreateReaClassWithGenericAndReflectionUsed())}");
 //Console.WriteLine("");
 //Console.WriteLine("result of ReflectionBuilder:" + $"{JsonConvert.SerializeObject(builder.CreateReaClassWithFactory())}");

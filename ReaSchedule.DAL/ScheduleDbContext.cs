@@ -38,6 +38,7 @@ public class ScheduleDbContext : DbContext
     public DbSet<ReaGroup> ReaGroups{ get; set; }
     public DbSet<ScheduleWeek> ScheduleWeeks{ get; set; }
     public DbSet<ScheduleDay> ScheduleDays { get; set; }
+    public DbSet<User> Users{ get; set; }
 
     
 

@@ -137,6 +137,30 @@ namespace ScheduleWorker.Services
 
             return JsPipeline;
         }
+
+        public static string CheckForGroupExistance(string group)
+        {
+            string func = $"group = {group}" +
+                "\r\nasync function CheckForGropExistance(group)" +
+                "\r\n{" +
+                "\r\n    let row;" +
+                "\r\n    let ajaxData;" +
+                "\r\n    await $.ajax({" +
+                "\r\n                url: \"/Schedule/ScheduleCard\"," +
+                "\r\n                type: \"GET\"," +
+                "\r\n                data: { selection: group, weekNum: \"6\", catfilter: 0 }," +
+                "\r\n                dataType: 'html'," +
+                "\r\n                success: function (data) {" +
+                "\r\n                ajaxData = data;" +
+                "\r\n                }})" +
+                "\r\n    row = ajaxData.includes(\"<div class=\")" +
+                "\r\n    return row" +
+                "\r\n}" +
+                "\r\n" +
+                "await CheckForGropExistance(group)";
+
+            return func;
+        }
     }
 
 }
