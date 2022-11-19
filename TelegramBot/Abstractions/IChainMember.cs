@@ -1,4 +1,4 @@
-﻿namespace TelegramBot.Interfaces
+﻿namespace TelegramBot.Abstractions
 {
     public interface IChainMember<TSource, TResult>
     {

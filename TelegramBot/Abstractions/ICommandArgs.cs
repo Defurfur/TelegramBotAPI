@@ -5,7 +5,7 @@ using TelegramBot.Models;
 using TelegramBot.Services;
 using User = ReaSchedule.Models.User;
 
-namespace TelegramBot.Interfaces
+namespace TelegramBot.Abstractions
 {
     public interface ICommandArgs
     {
@@ -16,7 +16,9 @@ namespace TelegramBot.Interfaces
         OperationType OperationType { get; set; }
         IMessageSender? MessageSender { get; set; }
         IGroupSearchPipeline? GroupSearchPipeline { get; set; }
-
+        CallbackType CallbackType { get; set; }
+        ICallbackMessageUpdater? CallbackMessageUpdater { get; set; }
+        IUserUpdater? UserUpdater { get; set; }
     }
 
 

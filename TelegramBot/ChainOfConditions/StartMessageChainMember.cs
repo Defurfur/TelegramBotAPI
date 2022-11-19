@@ -1,11 +1,10 @@
 ﻿using Telegram.Bot.Types;
-using TelegramBot.Chain_of_commands;
 using TelegramBot.Commands;
-using TelegramBot.Interfaces;
+using TelegramBot.Abstractions;
 using TelegramBot.Models;
 using TelegramBot.Services;
 
-namespace TelegramBot.Chain_of_commands;
+namespace TelegramBot.ChainOfConditions;
 
 public class StartMessageChainMember : AbstractMessageChainMember
 {

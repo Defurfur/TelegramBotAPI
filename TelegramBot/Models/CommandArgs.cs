@@ -1,26 +1,20 @@
 ﻿using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using TelegramBot.Interfaces;
+using TelegramBot.Abstractions;
 using TelegramBot.Services;
 
-namespace TelegramBot.Models
+namespace TelegramBot.Models;
+
+public class CommandArgs : ICommandArgs
 {
-    public class CommandArgs : ICommandArgs
-    {
-        public ReaSchedule.Models.User? User { get; set; } = null;
-        public Update Update { get; set; }
-        public CallbackQuery? Callback { get; set; }
-        public UpdateType UpdateType { get; set; }
-        public OperationType OperationType { get; set; } = OperationType.Other;
-        public IMessageSender? MessageSender { get; set; }
-        public IGroupSearchPipeline? GroupSearchPipeline { get; set; }
-    }
-    public enum OperationType
-    {
-        NeedsSearchInDb,
-        NeedsSearchInSchedule,
-        IsStartCommand,
-        IsGroupInput,
-        Other,
-    }
+    public ReaSchedule.Models.User? User { get; set; } = null;
+    public Update Update { get; set; }
+    public CallbackQuery? Callback { get; set; }
+    public UpdateType UpdateType { get; set; }
+    public OperationType OperationType { get; set; } = OperationType.Other;
+    public CallbackType CallbackType { get; set; } = CallbackType.None;
+    public IUserUpdater? UserUpdater { get; set; }
+    public ICallbackMessageUpdater? CallbackMessageUpdater{ get; set; }
+    public IMessageSender? MessageSender { get; set; }
+    public IGroupSearchPipeline? GroupSearchPipeline { get; set; }
 }

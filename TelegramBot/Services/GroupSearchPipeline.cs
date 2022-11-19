@@ -1,13 +1,14 @@
 ﻿using ReaSchedule.DAL;
 using ReaSchedule.Models;
 using ScheduleWorker.Services;
+using TelegramBot.Models;
 using Message = Telegram.Bot.Types.Message;
 
 namespace TelegramBot.Services;
 
 public interface IGroupSearchPipeline
 {
-    Task<GroupHasBeenFound> Execute(Message message);
+    Task<GroupHasBeenFound> Execute(Message message, User? user = null);
 }
 
 public class GroupSearchPipeline : IGroupSearchPipeline
@@ -23,17 +24,20 @@ public class GroupSearchPipeline : IGroupSearchPipeline
         _context = context;
         _browserWrapper = browserWrapper;
     }
+  
 
-    public async Task<GroupHasBeenFound> Execute(Message message)
+    public async Task<GroupHasBeenFound> Execute(Message message, User? user = null)
     {
         if (message == null)
             ArgumentNullException.ThrowIfNull(message);
 
         _message = message;
 
-        if(TryFindGroupInDb(out var group))
+        if(TryFindGroupInDb(_message.Text, out var group))
         {
-            await TryRegisterUser(group);
+            var task = user is null ? TryRegisterUser(group) : TryChangeUsersGroup(user, group);   
+
+            await task;
             return GroupHasBeenFound.InDatabase;
         }
 
@@ -41,19 +45,19 @@ public class GroupSearchPipeline : IGroupSearchPipeline
 
         if (groupFoundInSchedule)
         {
-            // Здесь надо будет воткнуть TryRegisterUser 
+            // Здесь надо будет воткнуть onSearchSuccessOperation 
             return GroupHasBeenFound.InSchedule;
         }
 
         return GroupHasBeenFound.False;
     }
 
-    private bool TryFindGroupInDb(out ReaGroup? reaGroup)
+    private bool TryFindGroupInDb(string text, out ReaGroup? reaGroup)
     {
         var group = _context
             .ReaGroups
             .FirstOrDefault(x =>
-            x!.GroupName == _message!.Text!.ToLower().Trim());
+            x!.GroupName == text.ToLower().Trim());
 
         reaGroup = group;
         return reaGroup != null;
@@ -69,6 +73,15 @@ public class GroupSearchPipeline : IGroupSearchPipeline
         };
 
         await _context.Users.AddAsync(newUser);
+        await _context.SaveChangesAsync();
+
+    } 
+    private async Task TryChangeUsersGroup(User user, ReaGroup reaGroup)
+    {
+        user.ReaGroup = reaGroup;
+        user.ReaGroupId = reaGroup.Id;
+
+        _context.Users.Update(user);
         await _context.SaveChangesAsync();
 
     }

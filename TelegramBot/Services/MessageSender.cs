@@ -3,34 +3,18 @@ using Jint.Parser.Ast;
 using Microsoft.AspNetCore.Components.Forms;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using TelegramBot.Interfaces;
+using TelegramBot.Abstractions;
 using XAct.Messages;
 using Message = Telegram.Bot.Types.Message;
 using User = ReaSchedule.Models.User;
 
 namespace TelegramBot.Services;
 
-public enum MessageTextType
-{
-    NotYetProcessed,
-    StartCommand,
-    GroupInput,
-    Other
-}
-
-public enum GroupHasBeenFound
-{
-    InDatabase,
-    InSchedule,
-    False,
-}
 public class MessageSender : IMessageSender
 {
     private readonly ITelegramBotClient _bot;
 
-    public MessageSender(
-        ITelegramBotClient bot
-        )
+    public MessageSender(ITelegramBotClient bot)
     {
         _bot = bot;
     }
@@ -46,7 +30,9 @@ public class MessageSender : IMessageSender
     {
         return await _bot.SendTextMessageAsync(
             chatId: message!.Chat.Id,
-            text: "Группа найдена! Теперь вы можете пользоваться ботом!");
+            text: "Группа найдена! Теперь вы можете пользоваться ботом!",
+            replyMarkup: CustomKeyboardStorage.DefaultReplyKeyboard
+            );
     } 
     public async Task<Message> InvalidGroupInputMessage(Message message)
     {
@@ -61,6 +47,42 @@ public class MessageSender : IMessageSender
 
         return await _bot.SendTextMessageAsync(message!.Chat.Id, "Группа не найдена ни в базе, " +
             "ни в расписании. Убедитесь, что правильно ввели название группы");
+    } 
+    public async Task<Message> SendChangeGroupInfo(Message message)
+    {
+
+        return await _bot.SendTextMessageAsync(
+            chatId: message!.Chat.Id,
+            text: "Чтобы поменять группу, введите /change <название группы>" +
+            "\r\nНапример, /change 15.02Д-ММ2/19б"
+            ); 
     }
+    public async Task<Message> ChangeGroupSuccess(Message message)
+    {
+
+        return await _bot.SendTextMessageAsync(
+            chatId : message!.Chat.Id,
+            text : "Группа успешно изменена!"
+            );
+    }
+    public async Task<Message> SendSubscriptionSettings(Message message)
+    {
+
+        return await _bot.SendTextMessageAsync(
+            chatId : message!.Chat.Id,
+            text : "Подписка позволяет получать расписание автоматически в указанное вами время."
+            + "Например, вы можете получать недельное расписание каждую неделю в указанный вами день, либо" 
+            + "получать расписание на день в день занятия.",
+            replyMarkup: CustomKeyboardStorage.SubscriptionDisabledKeyboard
+            );
+    }
+    public async Task<Message> SendMessageWithSomeText(Message message, string text)
+    {
+        return await _bot.SendTextMessageAsync(
+            chatId: message!.Chat.Id,
+            text: text
+            );
+    }
+  
 
 }

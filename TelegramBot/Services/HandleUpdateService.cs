@@ -2,6 +2,7 @@
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
+using TelegramBot.Abstractions;
 
 namespace TelegramBot.Services;
 
@@ -67,18 +68,5 @@ public class HandleUpdateService
         _logger.LogInformation("HandleError: {ErrorMessage}", ErrorMessage);
         return Task.CompletedTask;
     }
-    private static ReplyKeyboardMarkup CreateCustomKeyboard()
-    {
-        ReplyKeyboardMarkup keyboard = new(
-                new[]
-                {
-                        new KeyboardButton[] { "Загрузить расписание" },
-                        new KeyboardButton[] { "Настройки подписки", "Смена группы" },
-                })
-        {
-            ResizeKeyboard = true
-        };
-
-        return keyboard;
-    }
+    
 }

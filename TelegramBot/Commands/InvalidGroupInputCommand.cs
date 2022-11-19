@@ -1,5 +1,5 @@
 ﻿using Telegram.Bot.Types;
-using TelegramBot.Interfaces;
+using TelegramBot.Abstractions;
 
 namespace TelegramBot.Commands;
 

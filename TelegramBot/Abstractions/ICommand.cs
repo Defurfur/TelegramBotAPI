@@ -1,4 +1,4 @@
-﻿namespace TelegramBot.Interfaces
+﻿namespace TelegramBot.Abstractions
 {
     public interface ICommand<TSource, TResult>
     {
