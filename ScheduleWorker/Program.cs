@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using ReaSchedule.DAL;
 using PuppeteerSharp;
 using ReaSchedule.Models;
-using ScheduleWorker.Services;
+using ScheduleUpdateService.Services;
 
 IHost host = Host.CreateDefaultBuilder(args)
 
@@ -20,19 +20,6 @@ IHost host = Host.CreateDefaultBuilder(args)
 
                 ServiceLifetime.Singleton);
 
-
-
-        //services.AddHttpClient("Crawler", options =>
-
-        //{
-
-        //    options.DefaultRequestHeaders.Add("User-Agent",
-
-        //        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)" +
-
-        //        " Chrome/102.0.4985.0 Safari/537.36 Edg/102.0.1235.1");
-
-        //});
 
         services.AddHttpClient("Crawler", options =>
         {

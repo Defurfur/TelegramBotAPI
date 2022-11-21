@@ -1,4 +1,4 @@
-﻿namespace TelegramBot;
+﻿namespace TelegramBotService;
 
 public record BotConfiguration
 {

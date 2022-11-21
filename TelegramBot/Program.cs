@@ -1,14 +1,12 @@
 
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using ReaSchedule.DAL;
-using ScheduleWorker.Services;
+using ScheduleUpdateService.Services;
 using Telegram.Bot;
-using Telegram.Bot.Types.Enums;
-using TelegramBot;
-using TelegramBot.Abstractions;
-using TelegramBot.Services;
+using TelegramBotService;
+using TelegramBotService.Abstractions;
+using TelegramBotService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 

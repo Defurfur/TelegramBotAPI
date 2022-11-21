@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Worker">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>dotnet-ScheduleWorker-15B85D02-CF2F-4A4E-BC86-FCCC431E6610</UserSecretsId>
@@ -12,10 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="AngleSharp" Version="0.17.1" />
-    <PackageReference Include="AngleSharp.Io" Version="0.17.0" />
-    <PackageReference Include="AngleSharp.Js" Version="0.15.0" />
-    <PackageReference Include="BenchmarkDotNet" Version="0.13.2" />
+
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.8" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.8">
       <PrivateAssets>all</PrivateAssets>
@@ -34,6 +31,7 @@
   <ItemGroup>
     <ProjectReference Include="..\ReaSchedule.DAL\ReaSchedule.DAL.csproj" />
     <ProjectReference Include="..\ReaSchedule.Models\ReaSchedule.Models.csproj" />
+    <ProjectReference Include="..\ScheduleUpdateService\ScheduleUpdateService.csproj" />
   </ItemGroup>
 
   <ProjectExtensions><VisualStudio><UserProperties appsettings_1development_1json__JsonSchema="https://docs.gradle.com/enterprise/admin/schema/gradle-enterprise-config-schema-5.json" /></VisualStudio></ProjectExtensions>
