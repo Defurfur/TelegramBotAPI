@@ -1,15 +1,12 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using ScheduleUpdateService.Abstractions;
 using System.Reflection;
 using System.Text;
 using XSystem.Security.Cryptography;
 
 namespace ScheduleUpdateService.Services
 {
-    public interface IHashingService
-    {
-        public string GetHashSum<T>(T tObject);
-    }
     public class HashingService : IHashingService
     {
         public string _hashingData = string.Empty;

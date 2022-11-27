@@ -38,7 +38,9 @@ public class ScheduleLoader : IScheduleLoader
             .Include(x => x.ScheduleWeeks!)
                 .ThenInclude(x => x.ScheduleDays)
                     .ThenInclude(x => x.ReaClasses)
-                    .FirstAsync(x => x.Id == user.ReaGroupId);
+                    .FirstOrDefaultAsync(x => x.Id == user.ReaGroupId);
+
+
 
 
         return reaGroup;

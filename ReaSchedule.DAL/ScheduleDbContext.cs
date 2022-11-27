@@ -23,13 +23,13 @@ public class ScheduleDbContext : DbContext
         base.OnModelCreating(modelBuilder);
 
         modelBuilder.Entity<ScheduleWeek>()
-            .HasMany<ScheduleDay>("ScheduleDays")
+            .HasMany(x => x.ScheduleDays)
             .WithOne(x => x.ScheduleWeek)
             .HasForeignKey(x => x.ScheduleWeekId);
 
         modelBuilder.Entity<ScheduleDay>()
             .HasOne(x => x.ScheduleWeek)
-            .WithMany("ScheduleDays")
+            .WithMany(x => x.ScheduleDays)
             .HasForeignKey(x => x.ScheduleWeekId);
 
     }

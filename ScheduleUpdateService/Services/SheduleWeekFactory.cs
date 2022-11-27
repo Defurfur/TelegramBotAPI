@@ -1,21 +1,17 @@
 ﻿using ReaSchedule.Models;
+using ScheduleUpdateService.Abstractions;
+using ScheduleUpdateService.Extensions;
 using System.Text.RegularExpressions;
 
 namespace ScheduleUpdateService.Services
 {
-
-    public interface IScheduleWeekFactory
-    {
-        public List<ScheduleWeek> CreateMany(List<WeeklyClassesWrapper> weeklyClassesWrappers);
-        public ScheduleWeek CreateInstance(WeeklyClassesWrapper weeklyClassesWrapper);
-
-    }
     public class ScheduleWeekFactory : IScheduleWeekFactory
     {
         private readonly IReaClassFactory _reaClassFactory;
         private List<string> _processingClassInfoArray = new();
-        private readonly Regex _dayOfWeekRE = new(@"(?<=(</strong>[\Wa-z]+))([а-я]+)");
-        private readonly Regex _dateRE = new(@"(?<=,)([0-9 а-я]+)(?=,)");
+        private readonly Regex _dayOfWeekRE = new(@"(понедельник|вторник|среда|четверг|пятница|суббота)");
+        private readonly Regex _dateRE = 
+            new(@"\d{1,2}\s*(марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря|января|февраля)\s*\d{4}");
 
         public ScheduleWeekFactory(IReaClassFactory reaClassFactory)
         {
@@ -50,7 +46,7 @@ namespace ScheduleUpdateService.Services
         public ScheduleWeek CreateInstance(WeeklyClassesWrapper weeklyClassesWrapper)
         {
 
-            var scheduleWeek = new ScheduleWeek();
+            var scheduleWeek = new ScheduleWeek(createDefaultScheduleDays: true);
             _processingClassInfoArray = weeklyClassesWrapper.WeeklyClasses;
 
             if (_processingClassInfoArray is null)

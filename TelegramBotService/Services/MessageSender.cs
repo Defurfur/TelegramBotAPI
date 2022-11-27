@@ -30,7 +30,6 @@ public class MessageSender : IMessageSender
     } 
     public async Task<Message> InvalidGroupInputMessage(Message message)
     {
-
         return await _bot.SendTextMessageAsync(message!.Chat.Id, "Неправильно введена группа." +
                 " Удалите пробелы и убедитесь, что вы правильно написали номер. Если вы уверены," +
                 "что написали номер группы правильно, но все еще получаете это сообщение" +

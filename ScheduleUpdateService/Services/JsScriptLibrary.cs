@@ -1,4 +1,6 @@
-﻿namespace ScheduleUpdateService.Services;
+﻿using static System.Runtime.InteropServices.JavaScript.JSType;
+
+namespace ScheduleUpdateService.Services;
 
 public static class JsScriptLibrary
 {
@@ -113,9 +115,9 @@ public static class JsScriptLibrary
 
     public static string CheckForGroupExistance(string group)
     {
-        string func = $"group = {group}" +
-            "\r\nasync function CheckForGropExistance(group)" +
-            "\r\n{" +
+        string func = "async function CheckForGropExistance(group)" +
+            "\r\n" +
+            "{" +
             "\r\n    let row;" +
             "\r\n    let ajaxData;" +
             "\r\n    await $.ajax({" +
@@ -129,8 +131,10 @@ public static class JsScriptLibrary
             "\r\n    row = ajaxData.includes(\"<div class=\")" +
             "\r\n    return row" +
             "\r\n}" +
-            "\r\n" +
-            "await CheckForGropExistance(group)";
+            $"\r\ngroup = '{group}'" +
+            "\r\nCheckForGropExistance(group)";
+
+
 
         return func;
     }

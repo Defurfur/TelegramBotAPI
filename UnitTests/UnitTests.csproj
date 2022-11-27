@@ -22,8 +22,4 @@
     </PackageReference>
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\TelegramBot\TelegramBotAPI.csproj" />
-  </ItemGroup>
-
 </Project>

@@ -1,15 +1,9 @@
 ﻿using PuppeteerSharp;
 using ReaSchedule.Models;
+using ScheduleUpdateService.Abstractions;
+using ScheduleUpdateService.Extensions;
 
 namespace ScheduleUpdateService.Services;
-
-
-public interface IScheduleLoader
-{
-    Task<List<WeeklyClassesWrapper>> LoadPageContentAndParse(
-        int weekCountToParse,
-        ReaGroup reaGroup);
-}
 
 //public class PuppeteerScheduleLoader : IScheduleLoader
 //{
@@ -106,13 +100,13 @@ public interface IScheduleLoader
 //    }
 
 ////}
-public class JsScheduleLoader : IScheduleLoader
+public class JsScheduleParser : IScheduleParser
 {
     private readonly IBrowserWrapper _browserWrapper;
     private readonly NavigationOptions _navigationOptions = new() { Timeout = 0 };
     private readonly string _reaWebsiteLink = "https://rasp.rea.ru/";
 
-    public JsScheduleLoader(IBrowserWrapper browserWrapper)
+    public JsScheduleParser(IBrowserWrapper browserWrapper)
     {
         _browserWrapper = browserWrapper;
     }

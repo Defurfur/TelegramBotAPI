@@ -1,6 +1,7 @@
 ﻿using System.Text.RegularExpressions;
+using XAct;
 
-namespace ScheduleUpdateService.Services;
+namespace ScheduleUpdateService.Extensions;
 
 public static class DateTimeExtension
 {
@@ -101,58 +102,33 @@ public static class DateTimeExtension
 
     }
 
-    public static bool TryGetDate(string dateString, out DateOnly date)
-    {
-        date = default;
-        if (string.IsNullOrEmpty(dateString))
-            return false;
 
-        dateString = dateString.ToLower().TrimStart();
-
-        var monthName = _monthRE.Match(dateString).Value.Replace(" ", "");
-
-        if (monthName.EndsWith('а'))
-            monthName = monthName.Remove(monthName.Length - 1);
-        else
-            monthName = monthName.Remove(monthName.Length - 1, 1) + "ь";
-
-        string replacementString = string.Empty;
-
-        if (_monthNamesDict.TryGetValue(monthName, out var m))
-            replacementString = $"/{m}/";
-        else
-            return false;
-
-        dateString = dateString.Replace(_monthRE.Match(dateString).Value, replacementString);
-
-        return DateOnly.TryParse(dateString, out date);
-    }
     public static DateOnly GetDate(string date)
     {
 
-        date = date.ToLower().TrimStart();
+        date = date.ToLower().Trim();
 
-        var monthName = _monthRE.Match(date).Value.Replace(" ", "");
+        var splittedDate = date.Split(' ');
 
-        if (monthName.EndsWith('а'))
-            monthName = monthName.Remove(monthName.Length - 1);
+        if (splittedDate.Length != 3)
+            return default;
+
+        var day = int.Parse(splittedDate[0]);
+        var year = int.Parse(splittedDate[2]);
+        var monthAsString = splittedDate[1];
+
+        if (monthAsString.EndsWith('а'))
+            monthAsString = monthAsString.Remove(monthAsString.Length - 1);
         else
-            monthName = monthName.Remove(monthName.Length - 1, 1) + "ь";
+            monthAsString = monthAsString.Remove(monthAsString.Length - 1, 1) + "ь";
 
-        string replacementString = string.Empty;
+        _ = _monthNamesDict.TryGetValue(monthAsString, out var month);
 
-        if (_monthNamesDict.TryGetValue(monthName, out var m))
-            replacementString = $"/{m}/";
-        else
-            throw new Exception("Could not parse date");
+        if(month == 0 || day == 0 || year == 0)
+            return default;
 
-        date = date.Replace(_monthRE.Match(date).Value, replacementString);
+        return new DateOnly(year, month, day);
 
-        DateOnly newDate = new();
-        if (DateOnly.TryParse(date, out var realDate))
-            return realDate;
-        else
-            return newDate;
     }
 
 

@@ -1,4 +1,5 @@
 ﻿using ReaSchedule.Models;
+using ScheduleUpdateService.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,27 +10,17 @@ using System.Threading.Tasks;
 namespace ScheduleUpdateService.Services
 {
 
-    public interface IGenericFactory<T>
-        where T : class, new()
-    {
-        public T CreateInstance();
-    }
 
-    public interface IReaClassFactory
-    {
-        public ReaClass CreateInstance(string classInfo);
-        public List<ReaClass> CreateFromList(IEnumerable<string> array);
-    }
     public class SimpleReaClassFactory : IReaClassFactory
     {
         #region Regex fields
         private readonly Regex _classNameRE = new(@"(?<=(<h5>))((\w+ *)+)");
         private readonly Regex _classTypeRE = new(@"(?<=(<strong>))((\w+ *)+)");
         private readonly Regex _classSubgroupRE = new(@"(?<=(data-subgroup=.))([a-z0-9A-Zа-яА-Я]+)");
-        private readonly Regex _classOrdinalNumberRE = new(@"(\d\s\w+)(?=<br\s/>)", RegexOptions.Singleline);
+        private readonly Regex _classOrdinalNumberRE = new(@"(\d{1}\s+пара)");
         private readonly Regex _professorRE = new(@"(?<=\?q=)((\w+ *)+)");
         private readonly Regex _dataElementIdRE = new(@"(?<=data-elementid=\S)(\d+)");
-        private readonly Regex _auditionRe = new(@"(?<=Аудитория:\s*)(\d+\s\w+\s*-\s+[0-9а-я/]+)");
+        private readonly Regex _auditionRe = new(@"(?<=Аудитория:\s*)([а-я/0-9/\s-]*)");
         #endregion
         public ReaClass CreateInstance(string classInfo)
         {
@@ -44,6 +35,7 @@ namespace ScheduleUpdateService.Services
                 Audition = _auditionRe.Match(classInfo).Value
                 .Replace("\r", "")
                 .Replace("\n", "")
+                .Trim()
                 .Replace("  ",""),
 
                 Professor = _professorRE.Match(classInfo).Value,

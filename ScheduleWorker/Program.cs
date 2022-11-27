@@ -1,15 +1,16 @@
 using Microsoft.EntityFrameworkCore;
 using ReaSchedule.DAL;
-using PuppeteerSharp;
-using ReaSchedule.Models;
 using ScheduleUpdateService.Services;
+using Coravel;
+using ScheduledActivities.Jobs;
+using ScheduleUpdateService.Abstractions;
+using ScheduleUpdateService.Extensions;
 
 IHost host = Host.CreateDefaultBuilder(args)
 
     .ConfigureServices((Action<HostBuilderContext, IServiceCollection>)((host, services) =>
 
     {
-
         services.AddDbContext<ScheduleDbContext>(options =>
 
             options.UseNpgsql(
@@ -30,22 +31,38 @@ IHost host = Host.CreateDefaultBuilder(args)
 
                 " Chrome/102.0.4985.0 Safari/537.36 Edg/102.0.1235.1");
         });
-
-        services.AddSingleton<IEntityUpdater, EntityUpdater>();
-
         services.AddHostedService<ScheduleWorker.Worker>();
-
-        services.AddSingleton<IBrowserWrapper, BrowserWrapper>();
-        services.AddSingleton<IScheduleLoader, JsScheduleLoader>();
-        services.AddSingleton<IParserPipeline, ParserPipeline>();
-        services.AddSingleton<IReaClassFactory, SimpleReaClassFactory>();
-        services.AddSingleton<IScheduleWeekFactory, ScheduleWeekFactory>();
-        services.AddSingleton<IReaGroupFactory, ReaGroupFactory>();
-        services.AddSingleton<IHashingService, HashingService>();
+        services.AddTransient<TestDiJob>();
+        services.AddTransient<UpdateGroupsScheduleJob>();
+        services.AddScheduler();
+        services.AddScheduleUpdateService(ServiceLifetime.Singleton);
 
     }))
 
     .Build();
+
+host.Services.UseScheduler(scheduler =>
+{
+     scheduler
+        .Schedule<UpdateGroupsScheduleJob>()
+        .DailyAtHour(10);
+    scheduler
+        .Schedule<UpdateGroupsScheduleJob>()
+        .DailyAtHour(14);
+    scheduler
+        .Schedule<UpdateGroupsScheduleJob>()
+        .DailyAtHour(18);
+    scheduler
+        .Schedule<UpdateGroupsScheduleJob>()
+        .DailyAtHour(22);
+    scheduler
+        .Schedule<UpdateGroupsScheduleJob>()
+        .DailyAtHour(2);
+    scheduler
+        .Schedule<UpdateGroupsScheduleJob>()
+        .DailyAtHour(6);
+
+});
 
 
 

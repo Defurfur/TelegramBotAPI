@@ -46,36 +46,25 @@ public class UserUpdater : IUserUpdater
 
             return;
         }
-        if (callbackData == "Disable Subscription")
-        {
-            user.SubscriptionEnabled = false;
-            user.DayNumberToUpdate = null;
-            user.DayOfUpdate = null;
-            user.UpdateSchedule = null;
 
-            _context.Update(user);
-            await _context.SaveChangesAsync();
-
-            return;
-        }
         var dataSplit = callbackData.Split(": ");
 
         if (dataSplit.Length == 2)
         {
-            user.UpdateSchedule = dataSplit[2] switch
+            user.UpdateSchedule = dataSplit[1] switch
             {
                 "every day" => UpdateSchedule.EveryDay,
                 "every week" => UpdateSchedule.EveryWeek,
                 _ => null
             };
-            user.DayNumberToUpdate = dataSplit[2] switch
+            user.DayNumberToUpdate = dataSplit[1] switch
             {
                 "1 day" => DayNumberToUpdate.OneDay,
                 "2 days" => DayNumberToUpdate.TwoDays,
                 "3 days" => DayNumberToUpdate.ThreeDays,
                 _ => null
             };
-            user.DayOfUpdate = dataSplit[2] switch
+            user.DayOfUpdate = dataSplit[1] switch
             {
                 "Monday" => DayOfWeek.Monday,
                 "Tuesday" => DayOfWeek.Tuesday,

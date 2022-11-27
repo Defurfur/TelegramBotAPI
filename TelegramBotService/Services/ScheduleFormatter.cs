@@ -1,5 +1,5 @@
 ﻿using ReaSchedule.Models;
-using ScheduleUpdateService.Services;
+using ScheduleUpdateService.Extensions;
 using System.Text;
 using TelegramBotService.Abstractions;
 

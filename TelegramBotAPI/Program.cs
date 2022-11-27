@@ -2,6 +2,8 @@
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using ReaSchedule.DAL;
+using ScheduleUpdateService.Abstractions;
+using ScheduleUpdateService.Extensions;
 using ScheduleUpdateService.Services;
 using Telegram.Bot;
 using TelegramBotService;
@@ -33,6 +35,8 @@ builder.Services.AddDbContext<ScheduleDbContext>(options =>
                 ServiceLifetime.Scoped);
 
 builder.Services.AddScoped<HandleUpdateService>();
+builder.Services.AddScheduleUpdateService(ServiceLifetime.Singleton);
+
 builder.Services.AddSingleton<IBrowserWrapper, BrowserWrapper>();
 builder.Services.AddSingleton<IMessageSender, MessageSender>();
 builder.Services.AddScoped<IGroupSearchPipeline, GroupSearchPipeline>();
@@ -40,6 +44,8 @@ builder.Services.AddScoped<IArgumentExtractorService, ArgumentExtractorService>(
 builder.Services.AddSingleton<ISpecificChainFactory, ChainFactory>();
 builder.Services.AddScoped<IUserUpdater, UserUpdater>();
 builder.Services.AddSingleton<ICallbackMessageUpdater, CallbackMessageUpdater>();
+builder.Services.AddScoped<IScheduleLoader, ScheduleLoader>();
+builder.Services.AddSingleton<IScheduleFormatter, ScheduleFormatter>();
 
 
 var app = builder.Build();

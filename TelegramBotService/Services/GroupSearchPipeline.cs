@@ -1,5 +1,7 @@
-﻿using ReaSchedule.DAL;
+﻿using Microsoft.EntityFrameworkCore;
+using ReaSchedule.DAL;
 using ReaSchedule.Models;
+using ScheduleUpdateService.Abstractions;
 using ScheduleUpdateService.Services;
 using TelegramBotService.Models;
 using Message = Telegram.Bot.Types.Message;
@@ -38,17 +40,20 @@ public class GroupSearchPipeline : IGroupSearchPipeline
 
         if(TryFindGroupInDb(_message.Text!, out var group))
         {
-            var task = user is null ? TryRegisterUser(group!) : TryChangeUsersGroup(user, group!);   
+            var task = user is null ? TryRegisterUserAsync(group!) : TryChangeUsersGroupAsync(user, group!);   
 
             await task;
             return GroupHasBeenFound.InDatabase;
         }
 
-        var groupFoundInSchedule = await TryFindGroupInScheduleAndUpdateContext();
+        bool groupFoundInSchedule = await TryFindGroupInScheduleAndUpdateContext(_message);
 
         if (groupFoundInSchedule)
         {
-            var task = user is null ? TryRegisterUser(group!) : TryChangeUsersGroup(user, group!);
+            TryFindGroupInDb(_message.Text!, out group);
+
+            var task = user is null ? TryRegisterUserAsync(group!) : TryChangeUsersGroupAsync(user, group!);
+
             await task;
             return GroupHasBeenFound.InSchedule;
         }
@@ -58,6 +63,8 @@ public class GroupSearchPipeline : IGroupSearchPipeline
 
     private bool TryFindGroupInDb(string text, out ReaGroup? reaGroup)
     {
+        text = text.Replace("/change ", "");
+
         var group = _context
             .ReaGroups
             .FirstOrDefault(x =>
@@ -67,7 +74,7 @@ public class GroupSearchPipeline : IGroupSearchPipeline
         return reaGroup != null;
     }
 
-    private async Task TryRegisterUser(ReaGroup group)
+    private async Task TryRegisterUserAsync(ReaGroup group)
     {
         var newUser = new ReaSchedule.Models.User()
         {
@@ -80,7 +87,7 @@ public class GroupSearchPipeline : IGroupSearchPipeline
         await _context.SaveChangesAsync();
 
     } 
-    private async Task TryChangeUsersGroup(User user, ReaGroup reaGroup)
+    private async Task TryChangeUsersGroupAsync(User user, ReaGroup reaGroup)
     {
         user.ReaGroup = reaGroup;
         user.ReaGroupId = reaGroup.Id;
@@ -90,31 +97,49 @@ public class GroupSearchPipeline : IGroupSearchPipeline
 
     }
 
-    private async Task<bool> TryFindGroupInScheduleAndUpdateContext()
+    private async Task<bool> TryFindGroupInScheduleAndUpdateContext(Message message)
     {
-        var url = "https://rasp.rea.ru/?q=" + _message!.Text!.Replace("/", "%2F");
+        var groupAsString = message.Text!.Replace("/change ", "");
+
+        var url = "https://rasp.rea.ru/?q=" + groupAsString.Replace("/", "%2F");
+
         if (!_browserWrapper.IsInit)
             await _browserWrapper.Init();
 
         var page = await _browserWrapper.Browser!.NewPageAsync();
-        await page.GoToAsync(url);
-        await page.WaitForNavigationAsync();
 
-        var jToken = await page.EvaluateExpressionAsync(JsScriptLibrary.CheckForGroupExistance(_message.Text));
+        await page.GoToAsync(url);
+        await page.WaitForNavigationAsync(new PuppeteerSharp.NavigationOptions { Timeout = 0});
+
+        var jToken = await page.EvaluateExpressionAsync(JsScriptLibrary.CheckForGroupExistance(groupAsString));
+
         var exists = Convert.ToBoolean(jToken.ToString());
         if (exists)
-            await AddNewGroup(_message.Text);
+            await AddNewGroupAsync(groupAsString);
 
         return exists;
 
     }
 
-    private async Task AddNewGroup(string groupName)
+    private async Task AddNewGroupAsync(string groupName)
     {
-        var newReaGroup = new ReaGroup() { GroupName = groupName};
-        var updatedReaGroup = await _parserPipeline.ParseAndUpdate(newReaGroup);
+        if (_context.ReaGroups.Any(x => x.GroupName == groupName))
+            return;
 
-        await _context.AddAsync(updatedReaGroup);
+        
+        _context.Add(new ReaGroup(){ GroupName = groupName });
+
+        await _context.SaveChangesAsync();
+
+        var createdGroup = _context
+            .ReaGroups
+            .First(x => x.GroupName == groupName);
+
+        var updatedReaGroup = await _parserPipeline.ParseAndUpdate(createdGroup);
+
+        createdGroup.ScheduleWeeks = updatedReaGroup.ScheduleWeeks;
+        createdGroup.Hash = updatedReaGroup.Hash;
+
         await _context.SaveChangesAsync();
     }
 

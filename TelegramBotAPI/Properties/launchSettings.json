@@ -9,7 +9,7 @@
     }
   },
   "profiles": {
-    "TelegramBotService": {
+    "TelegramBotAPI": {
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": true,

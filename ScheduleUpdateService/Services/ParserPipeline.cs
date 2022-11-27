@@ -1,21 +1,15 @@
 ﻿using ReaSchedule.Models;
+using ScheduleUpdateService.Abstractions;
 
 namespace ScheduleUpdateService.Services;
-
-
-public interface IParserPipeline
-{
-    int WeekCountToParse { get; set; }
-    Task<ReaGroup> ParseAndUpdate(ReaGroup reaGroup);
-}
 public class ParserPipeline : IParserPipeline
 {
-    private readonly IScheduleLoader _scheduleLoader;
+    private readonly IScheduleParser _scheduleLoader;
     private readonly IEntityUpdater _entityUpdater;
     public int WeekCountToParse { get; set; } = 2;
 
     public ParserPipeline(
-        IScheduleLoader scheduleLoader,
+        IScheduleParser scheduleLoader,
         IEntityUpdater entituUpdater)
     {
         _scheduleLoader = scheduleLoader;

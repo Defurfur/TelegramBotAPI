@@ -1,12 +1,8 @@
 ﻿using ReaSchedule.Models;
+using ScheduleUpdateService.Abstractions;
 
 namespace ScheduleUpdateService.Services
 {
-
-    public interface IReaGroupFactory
-    {
-        ReaGroup CreateReaGroup(List<ScheduleWeek> scheduleWeeks);
-    }
     public class ReaGroupFactory : IReaGroupFactory
     {
         private readonly IHashingService _hashingService;

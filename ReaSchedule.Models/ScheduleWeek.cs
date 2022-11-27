@@ -6,43 +6,43 @@ using System.Reflection.Metadata.Ecma335;
 namespace ReaSchedule.Models;
 public class ScheduleWeek : IIdentifyable<int>
 {
-    public ScheduleWeek() 
+    public ScheduleWeek() { }
+    public ScheduleWeek(bool createDefaultScheduleDays) 
     {
-        Monday.DayOfWeekName = "понедельник";
-        Tuesday.DayOfWeekName = "вторник";
-        Wednesday.DayOfWeekName = "среда";
-        Thursday.DayOfWeekName = "четверг";
-        Friday.DayOfWeekName = "пятница";
-        Saturday.DayOfWeekName = "суббота";
+        if (createDefaultScheduleDays)
+        {
+            ScheduleDays = new List<ScheduleDay>
+            {
+                new ScheduleDay(){DayOfWeek = DayOfWeek.Monday, DayOfWeekName = "понедельник" },
+                new ScheduleDay(){DayOfWeek = DayOfWeek.Tuesday, DayOfWeekName = "вторник" },
+                new ScheduleDay(){DayOfWeek = DayOfWeek.Wednesday, DayOfWeekName = "среда" },
+                new ScheduleDay(){DayOfWeek = DayOfWeek.Thursday, DayOfWeekName = "четверг" },
+                new ScheduleDay(){DayOfWeek = DayOfWeek.Friday, DayOfWeekName = "пятница"},
+                new ScheduleDay(){DayOfWeek = DayOfWeek.Saturday, DayOfWeekName = "суббота"},
+
+            };
+        }
+
     }
     #region DayOfWeek Backing fields
     [NotMapped]
-    private ScheduleDay _monday;
+    private ScheduleDay? _monday;
     [NotMapped]
-    private ScheduleDay _tuesday;
+    private ScheduleDay? _tuesday;
     [NotMapped]
-    private ScheduleDay _wednesday;
+    private ScheduleDay? _wednesday;
     [NotMapped]
-    private ScheduleDay _thursday;
+    private ScheduleDay? _thursday;
     [NotMapped]
-    private ScheduleDay _friday;
+    private ScheduleDay? _friday;
     [NotMapped]
-    private ScheduleDay _saturday;
+    private ScheduleDay? _saturday;
     #endregion
     public int Id { get; set; }
     public int ReaGroupId { get; set; }
     public DateOnly WeekStart { get; set; }
     public DateOnly WeekEnd { get; set; }
-    public List<ScheduleDay> ScheduleDays { get; set; } = new List<ScheduleDay>
-    { 
-        new ScheduleDay(){DayOfWeek = DayOfWeek.Monday },    
-        new ScheduleDay(){DayOfWeek = DayOfWeek.Tuesday },    
-        new ScheduleDay(){DayOfWeek = DayOfWeek.Wednesday },    
-        new ScheduleDay(){DayOfWeek = DayOfWeek.Thursday },    
-        new ScheduleDay(){DayOfWeek = DayOfWeek.Friday},    
-        new ScheduleDay(){DayOfWeek = DayOfWeek.Saturday},
-    
-    };
+    public List<ScheduleDay> ScheduleDays { get; set; }
     #region DayOfWeek Properties
     [NotMapped]
     public ScheduleDay Monday 

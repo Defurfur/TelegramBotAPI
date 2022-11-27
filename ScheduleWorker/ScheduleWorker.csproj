@@ -13,6 +13,8 @@
 
   <ItemGroup>
 
+    <PackageReference Include="Coravel" Version="4.2.0" />
+
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.8" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.8">
       <PrivateAssets>all</PrivateAssets>
@@ -31,6 +33,7 @@
   <ItemGroup>
     <ProjectReference Include="..\ReaSchedule.DAL\ReaSchedule.DAL.csproj" />
     <ProjectReference Include="..\ReaSchedule.Models\ReaSchedule.Models.csproj" />
+    <ProjectReference Include="..\ScheduledActivities\ScheduledActivities.csproj" />
     <ProjectReference Include="..\ScheduleUpdateService\ScheduleUpdateService.csproj" />
   </ItemGroup>
 
