@@ -8,34 +8,34 @@ namespace TelegramBotService.Services;
 public class ScheduleFormatter : IScheduleFormatter
 {
     private StringBuilder? _sb;
-    private StringBuilder sb { get => _sb ??= new(1000, 10_000); }
+    private StringBuilder Sb { get => _sb ??= new(1000, 4096); }
 
     public string Format(ReaGroup reaGroup)
     {
         FormatReaGroup(reaGroup);
-        var result = sb.ToString();
-        sb.Clear();
+        var result = Sb.ToString();
+        Sb.Clear();
         return result;
     }
     public string Format(List<ReaClass> reaClasses)
     {
         FormatReaClasses(reaClasses);
-        var result = sb.ToString();
-        sb.Clear();
+        var result = Sb.ToString();
+        Sb.Clear();
         return result;
     }
     public string Format(ScheduleWeek scheduleWeek)
     {
         FormatScheduleWeek(scheduleWeek);
-        var result = sb.ToString();
-        sb.Clear();
+        var result = Sb.ToString();
+        Sb.Clear();
         return result;
     }
     public string Format(ScheduleDay scheduleDay)
     {
         FormatScheduleDay(scheduleDay);
-        var result = sb.ToString();
-        sb.Clear();
+        var result = Sb.ToString();
+        Sb.Clear();
         return result;
     }
 
@@ -46,13 +46,13 @@ public class ScheduleFormatter : IScheduleFormatter
 
         foreach (var reaClass in orderedList)
         {
-            sb.Append(reaClass.OrdinalNumber + "\r\n\r\n");
-            sb.Append(reaClass.ClassName + "\r\n");
-            sb.Append(reaClass.ClassType + "\r\n");
-            sb.Append("Аудитория: " + reaClass.Audition + "\r\n");
-            sb.Append(reaClass.Professor + "\r\n");
+            Sb.Append(reaClass.OrdinalNumber + "\r\n\r\n");
+            Sb.Append(reaClass.ClassName + "\r\n");
+            Sb.Append(reaClass.ClassType + "\r\n");
+            Sb.Append("Аудитория: " + reaClass.Audition + "\r\n");
+            Sb.Append(reaClass.Professor + "\r\n");
             if (reaClass.Subgroup is not null)
-                sb.Append(reaClass.Subgroup + "\r\n");
+                Sb.Append(reaClass.Subgroup + "\r\n");
 
         }
     }
@@ -70,7 +70,7 @@ public class ScheduleFormatter : IScheduleFormatter
     } 
     private void FormatReaGroup(ReaGroup reaGroup)
     {
-        sb.Append($"Расписание для группы {reaGroup.GroupName.ToUpper()}");
+        Sb.Append($"Расписание для группы {reaGroup.GroupName.ToUpper()}");
 
         foreach (var scheduleWeek in reaGroup.ScheduleWeeks!)
         {
@@ -80,9 +80,9 @@ public class ScheduleFormatter : IScheduleFormatter
 
     private void FormatScheduleDay(ScheduleDay scheduleDay)
     {
-        sb.Append(scheduleDay.DayOfWeekName + "\r\n");
+        Sb.Append(scheduleDay.DayOfWeekName + "\r\n");
         if (scheduleDay.IsEmpty)
-            sb.Append("Занятия отсутствуют");
+            Sb.Append("Занятия отсутствуют");
         else
             FormatReaClasses(scheduleDay.ReaClasses);
 
@@ -92,7 +92,7 @@ public class ScheduleFormatter : IScheduleFormatter
     {
         var weekNumberAsString = scheduleWeek.WeekStart.GetWeekNumber().ToString();
 
-        sb.Append("Неделя " + weekNumberAsString + ":" + $"{scheduleWeek.WeekStart} - {scheduleWeek.WeekEnd}");
+        Sb.Append("Неделя " + weekNumberAsString + ":" + $"{scheduleWeek.WeekStart} - {scheduleWeek.WeekEnd}");
 
         foreach (var scheduleDay in scheduleWeek.GetScheduleDays())
         {

@@ -5,6 +5,8 @@ using Coravel;
 using ScheduledActivities.Jobs;
 using ScheduleUpdateService.Abstractions;
 using ScheduleUpdateService.Extensions;
+using System.Runtime.CompilerServices;
+using Coravel.Scheduling.Schedule.Interfaces;
 
 IHost host = Host.CreateDefaultBuilder(args)
 
@@ -41,11 +43,12 @@ IHost host = Host.CreateDefaultBuilder(args)
 
     .Build();
 
-host.Services.UseScheduler(scheduler =>
+host.Services
+    .UseScheduler(scheduler =>
 {
-     scheduler
-        .Schedule<UpdateGroupsScheduleJob>()
-        .DailyAtHour(10);
+    scheduler
+       .Schedule<UpdateGroupsScheduleJob>()
+       .DailyAtHour(10);
     scheduler
         .Schedule<UpdateGroupsScheduleJob>()
         .DailyAtHour(14);
@@ -62,7 +65,8 @@ host.Services.UseScheduler(scheduler =>
         .Schedule<UpdateGroupsScheduleJob>()
         .DailyAtHour(6);
 
-});
+})
+    .LogScheduledTaskProgress(host.Services.GetService<ILogger<IScheduler>>());
 
 
 

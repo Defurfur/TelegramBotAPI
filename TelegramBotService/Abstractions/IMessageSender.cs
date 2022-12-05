@@ -12,4 +12,6 @@ public interface IMessageSender
     Task<Message> SendChangeGroupInfo(Message message);
     Task<Message> ChangeGroupSuccess(Message message);
     Task<Message> SendMessageWithSomeText(Message message, string text);
+    Task<Message> SomethingWentWrongMessage(Message message);
+    Task<Message> SendGroupSearchInProcess(Message message);
 }

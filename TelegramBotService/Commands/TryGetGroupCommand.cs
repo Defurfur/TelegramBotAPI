@@ -1,7 +1,6 @@
 ﻿using Telegram.Bot.Types;
 using TelegramBotService.Abstractions;
 using TelegramBotService.Models;
-using TelegramBotService.Services;
 
 namespace TelegramBotService.Commands;
 
@@ -19,13 +18,13 @@ public class TryGetGroupCommand : ICommand<ICommandArgs, Task<Message>>
 
     public async Task<Message> ExecuteAsync()
     {
-        var groupHasBeenFound = await _groupSearchPipeline.Execute(_message);
+        var groupHasBeenFound = await _groupSearchPipeline.ExecuteAsync(_message);
 
         var result = groupHasBeenFound switch
         {
-            GroupHasBeenFound.InDatabase => _sender.GroupFoundMessage(_message),
-            GroupHasBeenFound.InSchedule => _sender.GroupFoundMessage(_message),
-            _ => _sender.GroupNotFoundMessage(_message)
+            GroupSearchState.FoundInDatabase => _sender.GroupFoundMessage(_message),
+            GroupSearchState.InProcess => _sender.SendGroupSearchInProcess(_message),
+            _ => _sender.SomethingWentWrongMessage(_message),
         };
         return await result;
     }

@@ -1,4 +1,5 @@
 
+using Coravel;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using ReaSchedule.DAL;
@@ -8,6 +9,7 @@ using ScheduleUpdateService.Services;
 using Telegram.Bot;
 using TelegramBotService;
 using TelegramBotService.Abstractions;
+using TelegramBotService.BackgroundTasks;
 using TelegramBotService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -36,8 +38,9 @@ builder.Services.AddDbContext<ScheduleDbContext>(options =>
 
 builder.Services.AddScoped<HandleUpdateService>();
 builder.Services.AddScheduleUpdateService(ServiceLifetime.Singleton);
-
+builder.Services.AddQueue();
 builder.Services.AddSingleton<IBrowserWrapper, BrowserWrapper>();
+builder.Services.AddScoped<IContextUpdateService, ContextUpdateService>();
 builder.Services.AddSingleton<IMessageSender, MessageSender>();
 builder.Services.AddScoped<IGroupSearchPipeline, GroupSearchPipeline>();
 builder.Services.AddScoped<IArgumentExtractorService, ArgumentExtractorService>();
@@ -46,7 +49,8 @@ builder.Services.AddScoped<IUserUpdater, UserUpdater>();
 builder.Services.AddSingleton<ICallbackMessageUpdater, CallbackMessageUpdater>();
 builder.Services.AddScoped<IScheduleLoader, ScheduleLoader>();
 builder.Services.AddSingleton<IScheduleFormatter, ScheduleFormatter>();
-
+builder.Services.AddTransient<TryFindGroupAndChangeUserInvocable>();
+builder.Services.AddTransient<TryFindGroupAndRegisterUserInvocable>();
 
 var app = builder.Build();
 

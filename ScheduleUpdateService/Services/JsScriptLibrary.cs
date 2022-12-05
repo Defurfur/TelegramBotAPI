@@ -85,8 +85,15 @@ public static class JsScriptLibrary
         "\r\n" +
         "}\r\n" +
         "await getClassesInfoByDateAndSlot(group, week);";
-
-    public static string getClassesInfoByData(string group, int week)
+    /// <summary>
+    /// Returns a script as a string, which recieves a <paramref name="group"/>'s schedule of a certain 
+    /// <paramref name="week"/> from rasp.rea.ru website as a list of strings. If there is no schedule 
+    /// on a specific week, returns empty string.
+    /// </summary>
+    /// <param name="group"></param>
+    /// <param name="week"></param>
+    /// <returns></returns>
+    public static string GetClassesInfoByData(string group, int week)
     {
         string JsPipeline =
             $"group = '{group}';\r\n" +
@@ -112,7 +119,12 @@ public static class JsScriptLibrary
 
         return JsPipeline;
     }
-
+    /// <summary>
+    /// A script as a string, which checks whether the <paramref name="group"/> exists on rasp.rea.ru website or not.
+    /// Script returns either true or false.
+    /// </summary>
+    /// <param name="group"></param>
+    /// <returns></returns>
     public static string CheckForGroupExistance(string group)
     {
         string func = "async function CheckForGropExistance(group)" +

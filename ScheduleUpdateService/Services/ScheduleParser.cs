@@ -124,10 +124,9 @@ public class JsScheduleParser : IScheduleParser
             WeeklyClassesWrapper weeklyClassesWrapper = new();
             List<string> weeklyClassesList = new();
 
-            var classesInfoJToken = await page.EvaluateExpressionAsync
-                (
-                JsScriptLibrary.getClassesInfoByData(reaGroup.GroupName, weekNumber)
-                );
+            string script = JsScriptLibrary.GetClassesInfoByData(reaGroup.GroupName, weekNumber);
+
+            var classesInfoJToken = await page.EvaluateExpressionAsync(script);
 
             if (classesInfoJToken.ToString() != "")
             {
@@ -145,6 +144,28 @@ public class JsScheduleParser : IScheduleParser
         return allWeeklyClasses;
 
     }
+
+    public async Task<bool> CheckForGroupExistance(string groupName)
+    {
+        var url = _reaWebsiteLink + "?q=" + groupName.Replace("/", "%2F");
+
+        if (!_browserWrapper.IsInit)
+            await _browserWrapper.Init();
+
+        var page = await _browserWrapper.Browser!.NewPageAsync();
+
+        await page.GoToAsync(url);
+        await page.WaitForNavigationAsync(_navigationOptions);
+
+        string script = JsScriptLibrary.CheckForGroupExistance(groupName);
+
+        var jToken = await page.EvaluateExpressionAsync(script);
+
+        var exists = Convert.ToBoolean(jToken.ToString());
+
+        return exists;
+    }
+
     private async Task<Page> LoadPageContent(string url)
     {
         if (!_browserWrapper.IsInit)

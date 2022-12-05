@@ -6,11 +6,10 @@ using System.Threading.Tasks;
 
 namespace TelegramBotService.Models
 {
-    public enum GroupHasBeenFound
+    public enum GroupSearchState
     {
-        InDatabase,
-        InSchedule,
-        False,
+        FoundInDatabase,
+        InProcess,
     }
     public enum OperationType
     {

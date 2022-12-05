@@ -2,7 +2,6 @@
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using TelegramBotService.Models;
-using TelegramBotService.Services;
 using User = ReaSchedule.Models.User;
 
 namespace TelegramBotService.Abstractions

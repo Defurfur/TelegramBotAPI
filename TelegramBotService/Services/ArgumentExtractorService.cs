@@ -84,9 +84,10 @@ public class ArgumentExtractorService : IArgumentExtractorService
                 _ => OperationType.Other
             };
         }
-        if(commandArgs.User != null 
-            && update.Message != null 
+        if (commandArgs.User != null
+            && update.Message != null
             && update.Message.Text!.Split(' ')[0] == "/change"
+            && update.Message.Text!.Split(' ').Length == 2
             && CheckMessageForGroupInput(update.Message.Text.Split(' ')[1]))
         {
             commandArgs.OperationType = OperationType.GroupChangeCommand;

@@ -1,4 +1,5 @@
-﻿using Telegram.Bot;
+﻿using ReaSchedule.Models;
+using Telegram.Bot;
 using TelegramBotService.Abstractions;
 using Message = Telegram.Bot.Types.Message;
 
@@ -30,15 +31,19 @@ public class MessageSender : IMessageSender
     } 
     public async Task<Message> InvalidGroupInputMessage(Message message)
     {
-        return await _bot.SendTextMessageAsync(message!.Chat.Id, "Неправильно введена группа." +
+        return await _bot.SendTextMessageAsync(
+            chatId: message!.Chat.Id,
+            text: "Неправильно введена группа." +
                 " Удалите пробелы и убедитесь, что вы правильно написали номер. Если вы уверены," +
                 "что написали номер группы правильно, но все еще получаете это сообщение" +
-                " - скопируйте его из личного кабинета или сайта с расписанием");
+                " - скопируйте название группы из личного кабинета или сайта с расписанием");
     } 
     public async Task<Message> GroupNotFoundMessage(Message message)
     {
 
-        return await _bot.SendTextMessageAsync(message!.Chat.Id, "Группа не найдена ни в базе, " +
+        return await _bot.SendTextMessageAsync(
+            chatId: message!.Chat.Id,
+            text: "Группа не найдена ни в базе, " +
             "ни в расписании. Убедитесь, что правильно ввели название группы");
     } 
     public async Task<Message> SendChangeGroupInfo(Message message)
@@ -75,6 +80,27 @@ public class MessageSender : IMessageSender
             chatId: message!.Chat.Id,
             text: text
             );
+    }
+
+    public async Task<Message> SendGroupSearchInProcess(Message message)
+    {
+        return await _bot.SendTextMessageAsync(
+            chatId: message!.Chat.Id,
+            text: "Введенной вами группы пока нет в базе данных." +
+            " Если вы ввели название группы правильно, то мы добавим расписание" +
+            "в базу и отправим вам сообщение об успешном добавлении группы, после чего вы сможете пользоваться ботом " +
+            "\r\nПроцедура может занять несколько минут."
+            );
+    }
+
+    public async Task<Message> SomethingWentWrongMessage(Message message)
+    {
+        return await _bot.SendTextMessageAsync(
+            chatId: message!.Chat.Id,
+            text: "Что-то пошло не так..."
+            );
+
+
     }
   
 

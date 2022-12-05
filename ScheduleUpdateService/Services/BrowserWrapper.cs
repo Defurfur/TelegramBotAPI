@@ -1,7 +1,9 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using PuppeteerSharp;
 using ScheduleUpdateService.Abstractions;
 using System.Diagnostics;
+using System.Xml.Linq;
 using XAct.Resources;
 using XSystem.Security.Cryptography;
 
@@ -39,7 +41,6 @@ public class BrowserWrapper : IBrowserWrapper
                     Timeout = 300000,
                     Headless = true,
                     Args = new string[] { "--no-zygote", "--no-sandbox", "--single-process" } });
-
                 IsInit = true;
 
             }

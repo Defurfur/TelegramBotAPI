@@ -12,37 +12,29 @@ namespace TelegramBotService.Services;
 
 public class ScheduleLoader : IScheduleLoader
 {
-    private readonly ScheduleDbContext _context;
     private readonly IScheduleFormatter _scheduleFormatter;
-
+    private readonly IContextUpdateService _contextUpdateService;
     public ScheduleLoader(
-        ScheduleDbContext context,
-        IScheduleFormatter scheduleFormatter)
+        IScheduleFormatter scheduleFormatter,
+        IContextUpdateService contextUpdateService)
     {
-        _context = context;
         _scheduleFormatter = scheduleFormatter;
+        _contextUpdateService = contextUpdateService;
     }
-
+    /// <summary>
+    /// Downloads <paramref name="user"/> group's schedule from context and formats it to a further send as a telegram message.
+    /// </summary>
+    /// <param name="user"></param>
+    /// <exception cref="ArgumentNullException"></exception>
+    /// <returns></returns>
     public async Task<string> DownloadFormattedScheduleAsync(User user)
     {
-        var group = await DownloadUserScheduleAsync(user);
+        var group = await _contextUpdateService.DownloadUserScheduleAsync(user);
+        ArgumentNullException.ThrowIfNull(group, nameof(group));
 
         var formattedSchedule = _scheduleFormatter.Format(group);
 
         return formattedSchedule;
     }
-    public async Task<ReaGroup> DownloadUserScheduleAsync(User user)
-    {
-        var reaGroup = await _context
-            .ReaGroups
-            .Include(x => x.ScheduleWeeks!)
-                .ThenInclude(x => x.ScheduleDays)
-                    .ThenInclude(x => x.ReaClasses)
-                    .FirstOrDefaultAsync(x => x.Id == user.ReaGroupId);
-
-
-
-
-        return reaGroup;
-    }
+    
 }
