@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using PuppeteerSharp;
 using ScheduleUpdateService.Abstractions;
 using System.Diagnostics;
@@ -14,10 +15,12 @@ namespace ScheduleUpdateService.Services;
 public class BrowserWrapper : IBrowserWrapper
 {
     private readonly IConfiguration _config;
+    private readonly ILogger<BrowserWrapper> _logger;
 
-    public BrowserWrapper(IConfiguration config)
+    public BrowserWrapper(IConfiguration config, ILogger<BrowserWrapper> logger)
     {
         _config = config;
+        _logger = logger;
     }
 
     public Browser? Browser { get; set; }
@@ -58,8 +61,7 @@ public class BrowserWrapper : IBrowserWrapper
         {
             var pages = await Browser!.PagesAsync();
             if (pages != null)
-                foreach (var page in pages)
-                    await page.CloseAsync();
+                await Task.WhenAll(pages.Select(x => x.CloseAsync()));
 
             await Browser!.CloseAsync();
             await Browser!.DisposeAsync();
@@ -74,10 +76,19 @@ public class BrowserWrapper : IBrowserWrapper
     {
         Process[] processes = Process.GetProcessesByName("chrome");
 
-        if(processes.Any() && processes != null)
+        if(processes != null && processes.Any())
             foreach (var process in processes)
-                process.Kill(true);
+            {
+                try
+                {
+                    process.Kill(true);
 
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogDebug(ex, "Error occured when trying to kill chrome process");   
+                }
+            }
     }
 }
 

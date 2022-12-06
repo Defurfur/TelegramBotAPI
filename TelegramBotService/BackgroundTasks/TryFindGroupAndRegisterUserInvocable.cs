@@ -62,8 +62,6 @@ namespace TelegramBotService.BackgroundTasks
                   groupName:             groupAsString,
                   parseAndUpdateMethod: _parserPipeline.ParseAndUpdate);
 
-
-
                 await _contextUpdateService.TryRegisterUserAsync(groupAsString, Payload.Chat.Id);
 
                 await _sender.GroupFoundMessage(Payload);

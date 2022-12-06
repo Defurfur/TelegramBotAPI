@@ -27,8 +27,7 @@ namespace TelegramBotService.BackgroundTasks
         private readonly IMessageSender _sender;
         private readonly IScheduleParser _scheduleParser;
         private readonly IContextUpdateService _contextUpdateService;
-        private readonly string _groupAsString;
-        public required MessageAndUser Payload { get; set; }
+        public MessageAndUser Payload { get; set; }
 
         public TryFindGroupAndChangeUserInvocable(
             IParserPipeline parserPipeline,
@@ -38,10 +37,6 @@ namespace TelegramBotService.BackgroundTasks
         {
             _parserPipeline = parserPipeline;
             _sender = sender;
-            _groupAsString = 
-                Payload.Message != null && Payload.Message.Text != null
-                ? Payload.Message.Text.Replace("/change", "") 
-                : string.Empty;
             _scheduleParser = scheduleParser;
             _contextUpdateService = contextUpdateService;
         }
@@ -56,19 +51,24 @@ namespace TelegramBotService.BackgroundTasks
         /// <returns></returns>
         public async Task Invoke()
         {
+            var groupAsString = Payload.Message.Text != null 
+                ? Payload.Message.Text.Replace("/change", "") 
+                : string.Empty;
+
+
             ArgumentNullException.ThrowIfNull(Payload.Message, nameof(Payload.Message));
             ArgumentNullException.ThrowIfNull(Payload.User, nameof(Payload.User));
-            ArgumentException.ThrowIfNullOrEmpty(_groupAsString, nameof(_groupAsString));
+            ArgumentException.ThrowIfNullOrEmpty(groupAsString, nameof(groupAsString));
 
-            var groupExists = await _scheduleParser.CheckForGroupExistance(_groupAsString);
+            var groupExists = await _scheduleParser.CheckForGroupExistance(groupAsString);
 
             if (groupExists)
             {
                 await _contextUpdateService.ParseScheduleWebsiteAndAddToContextNew(
-                  groupName: _groupAsString,
+                  groupName: groupAsString,
                   parseAndUpdateMethod: _parserPipeline.ParseAndUpdate);
 
-                await _contextUpdateService.TryChangeUsersGroupAsync(Payload.User, _groupAsString);
+                await _contextUpdateService.TryChangeUsersGroupAsync(Payload.User, groupAsString);
 
                 await _sender.ChangeGroupSuccess(Payload.Message);
 

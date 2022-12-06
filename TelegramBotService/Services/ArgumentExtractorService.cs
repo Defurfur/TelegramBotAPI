@@ -91,6 +91,7 @@ public class ArgumentExtractorService : IArgumentExtractorService
             && CheckMessageForGroupInput(update.Message.Text.Split(' ')[1]))
         {
             commandArgs.OperationType = OperationType.GroupChangeCommand;
+            commandArgs.Update.Message!.Text = update.Message.Text.Replace("/change ", "").Trim();
         }
 
         if (commandArgs.OperationType == OperationType.DownloadScheduleRequest)
@@ -128,7 +129,7 @@ public class ArgumentExtractorService : IArgumentExtractorService
             && cleanedText.Contains('/')
             && cleanedText.Contains('-')
             && cleanedText.Length >= 13
-            && cleanedText.Length <= 16;
+            && cleanedText.Length <= 19;
 
         bool secondCondition = cleanedText.StartsWith("97в/") || cleanedText.StartsWith("97з/");
 

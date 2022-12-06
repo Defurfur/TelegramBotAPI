@@ -54,11 +54,12 @@ public class GroupSearchPipeline : IGroupSearchPipeline
         ArgumentNullException.ThrowIfNull(message, nameof(message));
         ArgumentException.ThrowIfNullOrEmpty(message.Text, nameof(message.Text));
 
+        message.Text = message.Text.Trim().ToLower();
+
         if(_contextUpdateService.TryFindGroupInDb(message.Text, out var group))
         {
             await _contextUpdateService.TryRegisterUserAsync(group!, message.Chat.Id);
             return GroupSearchState.FoundInDatabase;
-
         }
 
         _queue.QueueInvocableWithPayload<TryFindGroupAndRegisterUserInvocable, Message>(message);
@@ -81,13 +82,15 @@ public class GroupSearchPipeline : IGroupSearchPipeline
         ArgumentNullException.ThrowIfNull(user, nameof(user));
         ArgumentException.ThrowIfNullOrEmpty(message.Text, nameof(message.Text));
 
+        message.Text = message.Text.Trim().ToLower();
+
         if (_contextUpdateService.TryFindGroupInDb(message.Text, out var group))
         {
             await _contextUpdateService.TryChangeUsersGroupAsync(user, group!);
             return GroupSearchState.FoundInDatabase;
         }
 
-        var MessageAndUser = new MessageAndUser { Message= message, User = user };
+        var MessageAndUser = new MessageAndUser { Message = message, User = user };
 
 
         _queue.QueueInvocableWithPayload<TryFindGroupAndChangeUserInvocable, MessageAndUser>(MessageAndUser);

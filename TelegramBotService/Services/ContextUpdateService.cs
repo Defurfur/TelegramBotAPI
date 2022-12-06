@@ -94,28 +94,18 @@ namespace TelegramBotService.Services
             if (_context.ReaGroups.Any(x => x.GroupName == groupName))
                 return;
 
-
             var group = new ReaGroup() { GroupName = groupName };
 
             _context.Add(group);
-            //_context.Add(new ReaGroup() { GroupName = groupName });
 
             await _context.SaveChangesAsync();
 
-            //var createdGroup = _context
-            //    .ReaGroups
-            //    .First(x => x.GroupName == groupName);
+            var updatedGroup = await parseAndUpdateMethod(group);
 
-            group = await parseAndUpdateMethod(group);
-            //var updatedReaGroup = await _parserPipeline.ParseAndUpdate(group);
-
-            //createdGroup.ScheduleWeeks = updatedReaGroup.ScheduleWeeks;
-            //createdGroup.Hash = updatedReaGroup.Hash;
+            group.ScheduleWeeks = updatedGroup.ScheduleWeeks;
+            group.Hash = updatedGroup.Hash;
 
             await _context.SaveChangesAsync();
-
-
-            //Check new version
         }
 
         /// <summary>
