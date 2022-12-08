@@ -17,6 +17,7 @@ var builder = WebApplication.CreateBuilder(args);
 var botConfig = builder.Configuration.GetSection("BotConfiguration").Get<BotConfiguration>();
 var botToken = botConfig.BotToken ?? string.Empty;
 
+builder.Logging.AddEventLog();
 
 builder.Services.AddHostedService<ConfigureWebhook>();
 

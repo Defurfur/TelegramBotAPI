@@ -87,23 +87,40 @@ namespace TelegramBotService.Services
 
         }
 
-        public async Task ParseScheduleWebsiteAndAddToContextNew(
-            string groupName,
-            Func<ReaGroup, Task<ReaGroup>> parseAndUpdateMethod)
-        {
-            if (_context.ReaGroups.Any(x => x.GroupName == groupName))
-                return;
 
-            var group = new ReaGroup() { GroupName = groupName };
+        /// <summary>
+        /// Creates a new <see cref="ReaGroup"/> class with the given <paramref name="groupName"/>,  
+        /// adds it to the context and returns. If a group with the given <paramref name="groupName"/> already
+        /// exists - returns it.
+        /// </summary>
+        /// <param name="groupName"></param>
+        /// <returns></returns>
+        public async Task<ReaGroup> CreateNewReaGroup(string groupName)
+        {
+
+            var group = await _context 
+                .ReaGroups
+                .FirstOrDefaultAsync(x => x.GroupName == groupName);
+
+            if (group is not null)
+                return group;
+
+            group = new ReaGroup() { GroupName = groupName};
 
             _context.Add(group);
-
             await _context.SaveChangesAsync();
 
-            var updatedGroup = await parseAndUpdateMethod(group);
+            return group;
 
-            group.ScheduleWeeks = updatedGroup.ScheduleWeeks;
-            group.Hash = updatedGroup.Hash;
+        }
+
+        public async Task UpdateReaGroup(
+            ReaGroup group,
+            List<ScheduleWeek> scheduleWeeks,
+            string hash)
+        {
+            group.ScheduleWeeks = scheduleWeeks;
+            group.Hash = hash;
 
             await _context.SaveChangesAsync();
         }

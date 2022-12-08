@@ -77,6 +77,7 @@ public class MessageSender : IMessageSender
     public async Task<Message> SendMessageWithSomeText(Message message, string text)
     {
         return await _bot.SendTextMessageAsync(
+            parseMode: Telegram.Bot.Types.Enums.ParseMode.MarkdownV2,
             chatId: message!.Chat.Id,
             text: text
             );
@@ -97,7 +98,7 @@ public class MessageSender : IMessageSender
     {
         return await _bot.SendTextMessageAsync(
             chatId: message!.Chat.Id,
-            text: "Что-то пошло не так..."
+            text: "Возникла какая-то ошибка... Попробуйте повторить операцию"
             );
 
 

@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using TelegramBotService.Abstractions;
 
@@ -25,10 +26,13 @@ public class HandleUpdateService
 
     public async Task EchoAsync(Update update)
     {
+        if (update.Type == UpdateType.Message && (update.Message is null || update.Message.Text is null))
+            return;
+
+        if (update.Type != UpdateType.CallbackQuery && update.Type != UpdateType.Message)
+            return;
 
         var args = _argumentExtractor.GetArgs(update);
-
-        Console.WriteLine("Argument Extractor возвращает" + JsonConvert.SerializeObject(args));
 
         var chainMembers = ChainStorage.ChainMembers;
 
@@ -37,8 +41,6 @@ public class HandleUpdateService
         var command = _chainFactory
             .GetFirstMember()!
             .Handle(args);
-
-        Console.WriteLine("Command is " + JsonConvert.SerializeObject(command));
 
         try
         {
