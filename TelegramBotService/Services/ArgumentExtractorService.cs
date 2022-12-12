@@ -139,8 +139,15 @@ public class ArgumentExtractorService : IArgumentExtractorService
     private ICommandArgs ProcessCallback(ICommandArgs args, Update update)
     {
         args.Callback = update.CallbackQuery;
+
         if (args.Callback is null)
             return args;
+
+        if (args.Callback.Data.Contains("ScheduleSwitcher"))
+        {
+            args.OperationType = OperationType.SwitchWeekCallback;
+            args.ScheduleLoader = _scheduleLoader;
+        }
 
         args.CallbackMessageUpdater = _callbackMessageUpdater;
         args.UserUpdater = _userUpdater;

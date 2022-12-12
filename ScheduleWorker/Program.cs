@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using ReaSchedule.DAL;
 using ScheduleUpdateService.Services;
 using Coravel;

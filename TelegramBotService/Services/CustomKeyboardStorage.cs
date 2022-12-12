@@ -59,6 +59,17 @@ public static class CustomKeyboardStorage
         }
     };
 
+    private static readonly List<InlineKeyboardButton> _weekScheduleSwitchersSetOnOne = new()
+    {
+        InlineKeyboardButton.WithCallbackData("~1~", "ScheduleSwitchers: 1"),
+        InlineKeyboardButton.WithCallbackData("2", "ScheduleSwitchers: 2"),
+    };
+    private static readonly List<InlineKeyboardButton> _weekScheduleSwitchersSetOnTwo = new()
+    {
+        InlineKeyboardButton.WithCallbackData("1", "ScheduleSwitchers: 1"),
+        InlineKeyboardButton.WithCallbackData("~2~", "ScheduleSwitchers: 2"),
+    };
+
 
 
     public static ReplyKeyboardMarkup DefaultReplyKeyboard { get => _defaultReplyKeyboard; }
@@ -67,8 +78,6 @@ public static class CustomKeyboardStorage
     public static InlineKeyboardMarkup ScheduleFrequencyOptionsKeyboard { get => new(_scheduleFrequencyButtons); }
     public static InlineKeyboardMarkup DayNumberOptionsKeyboard { get => new(_daynNumberOptionButtons); }
     public static InlineKeyboardMarkup WeeklyScheduleOptionsKeyboard { get => new(_weeklyScheduleOptionButtons); }
-
-
-
-
+    public static InlineKeyboardMarkup WeekScheduleSwitchersSetOnOne { get => new(_weekScheduleSwitchersSetOnOne); }
+    public static InlineKeyboardMarkup WeekScheduleSwitchersSetOnTwo { get => new(_weekScheduleSwitchersSetOnTwo); }
 }

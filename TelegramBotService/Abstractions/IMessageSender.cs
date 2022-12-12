@@ -14,4 +14,5 @@ public interface IMessageSender
     Task<Message> SendMessageWithSomeText(Message message, string text);
     Task<Message> SomethingWentWrongMessage(Message message);
     Task<Message> SendGroupSearchInProcess(Message message);
+    Task<Message> DownloadScheduleMessageWithKeyboard(Message message, string text);
 }

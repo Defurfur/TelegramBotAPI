@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 using Coravel;
 using Coravel.Invocable;
 using ScheduleUpdateService.Abstractions;
+using System.Diagnostics;
+using Humanizer;
 
 namespace ScheduledActivities.Jobs;
 
@@ -30,6 +32,7 @@ public class UpdateGroupsScheduleJob : IInvocable
 
     public async Task Invoke()
     {
+        var stopwatch = Stopwatch.StartNew();
         var reaGroupList = await _context
        .ReaGroups
        .Include(x => x.ScheduleWeeks!)
@@ -38,14 +41,13 @@ public class UpdateGroupsScheduleJob : IInvocable
                .AsSplitQuery()
                .ToListAsync();
 
-        _logger.LogInformation($"Recieved {reaGroupList.Count} groups from database." +
-            $" Starting update process");
+        _logger.LogInformation("Received {GroupCount} groups from database." +
+            " Starting update process",
+            reaGroupList.Count);
 
         var tasks = reaGroupList
             .Select(x => _parserPipeline.ParseAndUpdate(x));
         var results = await Task.WhenAll(tasks);
-
-        _logger.LogInformation("Downloaded current schedules and updated the groups");
 
         var joinedGroups = reaGroupList.Join(
             results,
@@ -65,11 +67,13 @@ public class UpdateGroupsScheduleJob : IInvocable
             }
 
         }
-        _logger.LogInformation($"{updatedGroupCounter} groups' schedules have changed" +
-            $" and been updated in the database");
 
         await _context.SaveChangesAsync();
-
+        stopwatch.Stop();
+        _logger.LogInformation("{UpdatedGroupsNumber} groups' schedules have changed" +
+            " and been updated in the database. Task took {Time} to finish",
+            updatedGroupCounter,
+            stopwatch.Elapsed.Humanize(2));
 
 
     }

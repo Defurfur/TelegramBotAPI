@@ -4,6 +4,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 using TelegramBotService.Abstractions;
 using XAct;
+using TelegramEmoji;
+using Humanizer;
 
 namespace TelegramBotService.Services;
 
@@ -12,32 +14,43 @@ public class ScheduleFormatter : IScheduleFormatter
     private StringBuilder? _sb;
     private StringBuilder Sb { get => _sb ??= new(1000, 4096); }
 
+    private readonly Dictionary<string, string> _ordinalNumberAndEmojiDict = new()
+    {
+        {"1 пара", "\u0031\u20E3" },
+        {"2 пара", "\u0032\u20E3" },
+        {"3 пара", "\u0033\u20E3" },
+        {"4 пара", "\u0034\u20E3" },
+        {"5 пара", "\u0035\u20E3" },
+        {"6 пара", "\u0036\u20E3" },
+        {"7 пара", "\u0037\u20E3" },
+        {"8 пара", "\u0038\u20E3" },
+    };
+
     public string Format(ReaGroup reaGroup)
     {
         FormatReaGroup(reaGroup);
-        var result = Sb.ToString();
-        result = EscapeCharacters(result);
+        var result = EscapeCharacters(Sb.ToString());
         Sb.Clear();
         return result;
     }
     public string Format(List<ReaClass> reaClasses)
     {
         FormatReaClasses(reaClasses);
-        var result = Sb.ToString();
+        var result = EscapeCharacters(Sb.ToString());
         Sb.Clear();
         return result;
     }
     public string Format(ScheduleWeek scheduleWeek)
     {
         FormatScheduleWeek(scheduleWeek);
-        var result = Sb.ToString();
+        var result = EscapeCharacters(Sb.ToString());
         Sb.Clear();
         return result;
     }
     public string Format(ScheduleDay scheduleDay)
     {
         FormatScheduleDay(scheduleDay);
-        var result = Sb.ToString();
+        var result = EscapeCharacters(Sb.ToString());
         Sb.Clear();
         return result;
     }
@@ -55,55 +68,57 @@ public class ScheduleFormatter : IScheduleFormatter
                 && reaClass.OrdinalNumber == orderedList[i - 1].OrdinalNumber)
             {
                 ProcessDoubledClass(reaClass);
-                return;
+                continue;
             }
-
+            
             ProcessSingleClass(reaClass);
-           
-            //TODO: test these 2 methods
+
         }
 
         void ProcessDoubledClass(ReaClass reaClass)
         {
-            if (reaClass.Subgroup is not null)
-                Sb.Append("Подруппа: " + reaClass.Subgroup + "\r\n");
+            if (!reaClass.Subgroup.IsNullOrEmpty())
+                Sb.Append("\r\nПодруппа: " + reaClass.Subgroup + "\r\n");
 
-            Sb.Append("Аудитория: " + reaClass.Audition + "\r\n");
+            Sb.Append("Аудитория: " + reaClass.Audition.Replace("  ","") + "\r\n");
 
-            Sb.Append
-            (
-                CapitalizeEachWordFirstLetter(reaClass.Professor) + "\r\n\r\n"
-            );
+            Sb.Append(reaClass.Professor.Humanize(LetterCasing.Title) + "\r\n");
         }
 
 
         void ProcessSingleClass(ReaClass reaClass)
         {
-            Sb.Append(reaClass.OrdinalNumber + "\r\n\r\n");
-            Sb.Append(reaClass.ClassName + "\r\n");
-            Sb.Append(reaClass.ClassType + "\r\n");
+            Sb.Append("\r\n" +
+                _ordinalNumberAndEmojiDict.GetValue(reaClass.OrdinalNumber, false) + " ");
 
-            if (reaClass.Subgroup is not null)
+            Sb.Append($"*{reaClass.ClassName}*\r\n");
+            Sb.Append($"_{reaClass.ClassType}_\r\n");
+
+            if (!reaClass.Subgroup.IsNullOrEmpty())
                 Sb.Append("Подруппа: " + reaClass.Subgroup + "\r\n");
 
-            Sb.Append("Аудитория: " + reaClass.Audition + "\r\n");
-            Sb.Append
-            (
-                CapitalizeEachWordFirstLetter(reaClass.Professor) + "\r\n\r\n"
-            );
+            Sb.Append("Аудитория: " + reaClass.Audition.Replace("  ","") + "\r\n");
+
+            Sb.Append(reaClass.Professor.Humanize(LetterCasing.Title) + "\r\n");
         }
 
     }
 
     private List<ReaClass> OrderReaClassByOrdinalNumber(List<ReaClass> reaClasses)
     {
+        var newItems = new List<ReaClass>();
         var newList = new List<ReaClass>();
+
         for(var i = 1; i <= 8; i++)
         {
-            var newItem = reaClasses.FirstOrDefault(x => x.OrdinalNumber.Contains($"{i}"));
-            if (newItem != null)
-                newList.Add(newItem);
+            newItems = reaClasses
+                .Where(x => x.OrdinalNumber.Contains($"{i}"))
+                .ToList();
+
+            if (newItems != null && newItems.Any())
+                newList.AddRange(newItems);
         }
+
         return newList;
     } 
     private void FormatReaGroup(ReaGroup reaGroup)
@@ -118,7 +133,13 @@ public class ScheduleFormatter : IScheduleFormatter
 
     private void FormatScheduleDay(ScheduleDay scheduleDay)
     {
-        Sb.Append($"\r\n*{CapitalizeFirstLetter(scheduleDay.DayOfWeekName)}*\r\n");
+        var DayOfWeek = scheduleDay.DayOfWeekName.Pascalize();
+
+        if (scheduleDay.Date == DateOnly.FromDateTime(DateTime.Now))
+            Sb.AppendFormat($"\r\n\u2757 -*{DayOfWeek}*-\r\n");
+        else
+            Sb.AppendFormat($"\r\n-*{DayOfWeek}*-\r\n");
+
 
         if (scheduleDay.IsEmpty)
             Sb.Append("Занятия отсутствуют\r\n");
@@ -130,8 +151,7 @@ public class ScheduleFormatter : IScheduleFormatter
     private void FormatScheduleWeek(ScheduleWeek scheduleWeek)
     {
         var weekNumberAsString = scheduleWeek.WeekStart.GetWeekNumber().ToString();
-
-        Sb.Append("*Расписание на " + weekNumberAsString + " Неделю*\r\n" 
+        Sb.Append("\r\n*Расписание на " + weekNumberAsString + " Неделю*\r\n" 
             + $"{scheduleWeek.WeekStart} - {scheduleWeek.WeekEnd}\r\n");
 
         foreach (var scheduleDay in scheduleWeek.GetScheduleDays())
@@ -143,8 +163,10 @@ public class ScheduleFormatter : IScheduleFormatter
     private string EscapeCharacters(string text)
     {
         return text
+            .Replace("""\""", """\\""")
             .Replace(".", """\.""")
-            .Replace("-", """\-""");
+            .Replace("-", """\-""")
+            .Replace("+", """\+""");
     }
 
     private string CapitalizeFirstLetter(string text)
@@ -163,7 +185,6 @@ public class ScheduleFormatter : IScheduleFormatter
             sb.Append(newWord + " ");
             
         }
-
         return sb.ToString();
     }
 }

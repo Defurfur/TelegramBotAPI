@@ -41,7 +41,7 @@ public class BrowserWrapper : IBrowserWrapper
                 Browser = await Puppeteer.LaunchAsync(
                 new LaunchOptions {
                     ExecutablePath = _config.GetSection("ChromiumPaths").GetSection("DefaultChromium").Value,
-                    Timeout = 300000,
+                    Timeout = 600000,
                     Headless = true,
                     Args = new string[] { "--no-zygote", "--no-sandbox", "--single-process" } });
                 IsInit = true;

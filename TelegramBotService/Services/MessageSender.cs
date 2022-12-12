@@ -1,5 +1,6 @@
 ﻿using ReaSchedule.Models;
 using Telegram.Bot;
+using Telegram.Bot.Types.ReplyMarkups;
 using TelegramBotService.Abstractions;
 using Message = Telegram.Bot.Types.Message;
 
@@ -102,6 +103,16 @@ public class MessageSender : IMessageSender
             );
 
 
+    }
+
+    public async Task<Message> DownloadScheduleMessageWithKeyboard(Message message, string text)
+    {
+        return await _bot.SendTextMessageAsync(
+            parseMode: Telegram.Bot.Types.Enums.ParseMode.MarkdownV2,
+            chatId: message!.Chat.Id,
+            text: text,
+            replyMarkup: CustomKeyboardStorage.WeekScheduleSwitchersSetOnOne
+            );
     }
   
 

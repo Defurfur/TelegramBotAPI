@@ -1,5 +1,6 @@
 ﻿using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.ReplyMarkups;
 using TelegramBotService.Abstractions;
 
 namespace TelegramBotService.Services;
@@ -51,12 +52,33 @@ public class CallbackMessageUpdater : ICallbackMessageUpdater
             text: "Настройки подписки успешно сохранены!"
             );
     }
+    public async Task<Message> UpdateWithCustomTextAndKeyboard(
+        CallbackQuery callback,
+        string text,
+        InlineKeyboardMarkup keyboard)
+    {
+        return await _bot.EditMessageTextAsync(
+            parseMode: Telegram.Bot.Types.Enums.ParseMode.MarkdownV2,
+            chatId: callback.Message.Chat.Id,
+            messageId: callback.Message.MessageId,
+            text: text,
+            replyMarkup: keyboard
+            );
+    }
     public async Task<Message> UpdateWithSubscriptionDisabled(CallbackQuery callback)
     {
         return await _bot.EditMessageTextAsync(
             chatId: callback.Message.Chat.Id,
             messageId: callback.Message.MessageId,
             text: "Подписка отменена!"
+            );
+    }
+    public async Task<Message> UpdateWithErrorMessage(CallbackQuery callback)
+    {
+        return await _bot.EditMessageTextAsync(
+            chatId: callback.Message.Chat.Id,
+            messageId: callback.Message.MessageId,
+            text: "Возникла какая-то ошибка."
             );
     }
 

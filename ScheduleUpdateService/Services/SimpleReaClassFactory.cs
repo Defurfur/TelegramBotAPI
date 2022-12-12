@@ -14,7 +14,7 @@ namespace ScheduleUpdateService.Services
     public class SimpleReaClassFactory : IReaClassFactory
     {
         #region Regex fields
-        private readonly Regex _classNameRE = new(@"(?<=(<h5>))((\w+ *)+)");
+        private readonly Regex _classNameRE = new(@"(?<=(<h5>))((\w+ *-*)+)");
         private readonly Regex _classTypeRE = new(@"(?<=(<strong>))((\w+ *)+)");
         private readonly Regex _classSubgroupRE = new(@"(?<=(data-subgroup=.))([a-z0-9A-Zа-яА-Я]+)");
         private readonly Regex _classOrdinalNumberRE = new(@"(\d{1}\s+пара)");
@@ -36,7 +36,8 @@ namespace ScheduleUpdateService.Services
                 .Replace("\r", "")
                 .Replace("\n", "")
                 .Trim()
-                .Replace("  ",""),
+                .Replace("-","- ")
+                .Replace("  "," "),
 
                 Professor = _professorRE.Match(classInfo).Value,
 

@@ -21,9 +21,9 @@ public class DownloadScheduleCommand : ICommand<ICommandArgs, Task<Message>>
 
     public async Task<Message> ExecuteAsync()
     {
-        var formattedSchedule = await _loader.DownloadFormattedScheduleAsync(_user);
+        var formattedSchedule = await _loader.DownloadFormattedScheduleAsync(_user, 0);
 
-        return await _sender.SendMessageWithSomeText(_message, formattedSchedule);
+        return await _sender.DownloadScheduleMessageWithKeyboard(_message, formattedSchedule);
     }
 }
 

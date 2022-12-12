@@ -8,6 +8,7 @@ public static class ChainStorage
 {
     private static List<IChainMember<ICommandArgs, Task<Message>>> _chainMembers = new()
     {
+        new SwithWeekCallbackChainMember(),
         new ProcessCallbackChainMember(),
         new TryChangeGroupChainMember(),
         new SubscriptionSettingsChainMember(),

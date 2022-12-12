@@ -19,6 +19,7 @@ namespace TelegramBotService.Models
         DownloadScheduleRequest,
         ChangeGroupButtonPressed,
         ChangeSubscriptionSettingsRequest,
+        SwitchWeekCallback,
         Other,
     }
 

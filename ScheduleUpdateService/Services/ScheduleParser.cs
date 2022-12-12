@@ -154,7 +154,7 @@ public class JsScheduleParser : IScheduleParser
 
         var page = await _browserWrapper.Browser!.NewPageAsync();
 
-        await page.GoToAsync(url);
+        await page.GoToAsync(url, _navigationOptions);
         await page.WaitForNavigationAsync(_navigationOptions);
 
         string script = JsScriptLibrary.CheckForGroupExistance(groupName);
@@ -174,7 +174,7 @@ public class JsScheduleParser : IScheduleParser
 
         var page = await _browserWrapper.Browser!.NewPageAsync();
 
-        await page.GoToAsync(url);
+        await page.GoToAsync(url, _navigationOptions);
 
         await page.WaitForNavigationAsync(_navigationOptions);
 

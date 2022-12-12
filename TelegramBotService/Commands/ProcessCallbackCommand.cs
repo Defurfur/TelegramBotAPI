@@ -23,6 +23,8 @@ public class ProcessCallbackCommand : ICommand<ICommandArgs, Task<Message>>
 
     public async Task<Message> ExecuteAsync()
     {
+
+
         var result = _callback.Data switch
         {
             "Enable Subscription" => _messageUpdater.UpdateWithScheduleFrequencyOptionsKeyboard(_callback),

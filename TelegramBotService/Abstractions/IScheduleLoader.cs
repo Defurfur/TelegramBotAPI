@@ -5,5 +5,6 @@ namespace TelegramBotService.Abstractions
     public interface IScheduleLoader
     {
         Task<string> DownloadFormattedScheduleAsync(User user);
+        Task<string> DownloadFormattedScheduleAsync(User user, int weekIndex);
     }
 }
