@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TelegramBotService.Abstractions;
+using XAct;
 
 namespace TelegramBotService.Services
 {
@@ -44,7 +45,6 @@ namespace TelegramBotService.Services
             var newUser = new ReaSchedule.Models.User()
             {
                 ChatId = chatId,
-                ReaGroup = group,
                 ReaGroupId = group.Id,
             };
 
@@ -67,7 +67,6 @@ namespace TelegramBotService.Services
 
         public async Task TryChangeUsersGroupAsync(User user, ReaGroup reaGroup)
         {
-            user.ReaGroup = reaGroup;
             user.ReaGroupId = reaGroup.Id;
 
             _context.Users.Update(user);
@@ -138,9 +137,43 @@ namespace TelegramBotService.Services
                 .Include(x => x.ScheduleWeeks!)
                     .ThenInclude(x => x.ScheduleDays)
                         .ThenInclude(x => x.ReaClasses)
+                        .AsSplitQuery()
                         .FirstOrDefaultAsync(x => x.Id == user.ReaGroupId);
 
             return reaGroup;
+        }
+        public async Task<List<ScheduleDay>> DownloadNfollowingDaysFromSchedule(
+            User user,
+            int dayAmount,
+            bool startWithNextDay)
+        {
+            var today = DateOnly.FromDateTime(DateTime.Now);
+            var dateList = new List<DateOnly>();
+
+            var i = startWithNextDay ? 1 : 0;
+
+            for(var x = 0; x < dayAmount; x++)
+            {
+                dateList.Add(DateOnly.FromDayNumber(today.DayNumber + x + i));
+            }
+
+            var reaGroup = await _context
+                .ReaGroups
+                .Include(x => x.ScheduleWeeks!)
+                    .ThenInclude(x => x.ScheduleDays.
+                            Where(y => dateList.Contains(y.Date)))
+                    .ThenInclude(x => x.ReaClasses)
+                    .AsSplitQuery()
+                    .FirstOrDefaultAsync(x => x.Id == user.ReaGroupId);
+
+            var scheduleDays = new List<ScheduleDay>();
+
+            if(reaGroup is null )
+                return scheduleDays;
+
+            reaGroup.ScheduleWeeks!.ForEach(x => scheduleDays.AddRange(x.ScheduleDays));
+
+            return scheduleDays;
         }
     }
 }

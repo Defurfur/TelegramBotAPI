@@ -8,4 +8,5 @@ public interface IScheduleFormatter
     string Format(ReaGroup reaGroup);
     string Format(ScheduleDay scheduleDay);
     string Format(ScheduleWeek scheduleWeek);
+    string Format(List<ScheduleDay> scheduleDays);
 }

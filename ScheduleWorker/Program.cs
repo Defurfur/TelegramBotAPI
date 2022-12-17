@@ -7,6 +7,8 @@ using ScheduleUpdateService.Abstractions;
 using ScheduleUpdateService.Extensions;
 using System.Runtime.CompilerServices;
 using Coravel.Scheduling.Schedule.Interfaces;
+using TelegramBotService.Services;
+using TelegramBotService.Abstractions;
 
 IHost host = Host.CreateDefaultBuilder(args)
 
@@ -39,9 +41,11 @@ IHost host = Host.CreateDefaultBuilder(args)
         services.AddScheduler();
         services.AddScheduleUpdateService(ServiceLifetime.Singleton);
 
+
     }))
 
     .Build();
+
 
 host.Services
     .UseScheduler(scheduler =>

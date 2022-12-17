@@ -4,6 +4,7 @@ namespace TelegramBotService.Abstractions
 {
     public interface IUserUpdater
     {
-        Task ProcessCallbackAndSaveChanges(User user, string callbackData);
+        Task<SubscriptionSettings> CreateSubscriptionSettings(User user);
+        Task ProcessCallbackAndSaveChanges(SubscriptionSettings settings, string callbackData);
     }
 }

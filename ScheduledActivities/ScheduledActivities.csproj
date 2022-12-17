@@ -15,6 +15,7 @@
   <ItemGroup>
     <ProjectReference Include="..\ReaSchedule.DAL\ReaSchedule.DAL.csproj" />
     <ProjectReference Include="..\ScheduleUpdateService\ScheduleUpdateService.csproj" />
+    <ProjectReference Include="..\TelegramBotService\TelegramBotService.csproj" />
   </ItemGroup>
 
 </Project>

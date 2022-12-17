@@ -15,12 +15,18 @@ public static class CustomKeyboardStorage
         ResizeKeyboard = true
     };
 
-    private static readonly List<InlineKeyboardButton> _subscriptionDisabledButton = new()
+    private static readonly List<InlineKeyboardButton> _noSubscriptionButton = new()
     { InlineKeyboardButton.WithCallbackData("Включить подписку", "Enable Subscription")};
 
     private static readonly List<List<InlineKeyboardButton>> _subscriptionEnabledButtons = new()
     {
         new(){ InlineKeyboardButton.WithCallbackData("Выключить подписку", "Disable Subscription") },
+        new(){ InlineKeyboardButton.WithCallbackData("Поменять настройки подписки", "Change subscription settings") },
+    };
+
+    private static readonly List<List<InlineKeyboardButton>> _subscriptionDisabledButtons = new()
+    {
+        new(){ InlineKeyboardButton.WithCallbackData("Включить подписку", "Enable Subscription") },
         new(){ InlineKeyboardButton.WithCallbackData("Поменять настройки подписки", "Change subscription settings") },
     };
 
@@ -69,15 +75,35 @@ public static class CustomKeyboardStorage
         InlineKeyboardButton.WithCallbackData("1", "ScheduleSwitchers: 1"),
         InlineKeyboardButton.WithCallbackData("~2~", "ScheduleSwitchers: 2"),
     };
+    private static readonly List<InlineKeyboardButton> _weekToSendButtons = new()
+    {
+        InlineKeyboardButton.WithCallbackData("Текущей недели", "WeekToSend: Current"),
+        InlineKeyboardButton.WithCallbackData("Следующей недели", "WeekToSend: Next"),
+    };
+    private static readonly List<InlineKeyboardButton> _timeOfDayButtons = new()
+    {
+        InlineKeyboardButton.WithCallbackData("Утром (до 8:00)", "TimeOfDay: Morning"),
+        InlineKeyboardButton.WithCallbackData("Днем (до 14:00)", "TimeOfDay: Afternoon"),
+        InlineKeyboardButton.WithCallbackData("Вечером (до 20:00)", "TimeOfDay: Evening"),
+    };
+    private static readonly List<InlineKeyboardButton> _includeTodayButtons = new()
+    {
+        InlineKeyboardButton.WithCallbackData("Да", "IncludeToday: True"),
+        InlineKeyboardButton.WithCallbackData("Нет", "IncludeToday: False"),
+    };
 
 
 
     public static ReplyKeyboardMarkup DefaultReplyKeyboard { get => _defaultReplyKeyboard; }
-    public static InlineKeyboardMarkup SubscriptionDisabledKeyboard { get => new(_subscriptionDisabledButton); }
+    public static InlineKeyboardMarkup NoSubscriptionKeyboard { get => new(_noSubscriptionButton); }
     public static InlineKeyboardMarkup SubscriptionEnabledKeyboard { get => new(_subscriptionEnabledButtons); }
+    public static InlineKeyboardMarkup SubscriptionDisabledKeyboard { get => new(_subscriptionDisabledButtons); }
     public static InlineKeyboardMarkup ScheduleFrequencyOptionsKeyboard { get => new(_scheduleFrequencyButtons); }
     public static InlineKeyboardMarkup DayNumberOptionsKeyboard { get => new(_daynNumberOptionButtons); }
     public static InlineKeyboardMarkup WeeklyScheduleOptionsKeyboard { get => new(_weeklyScheduleOptionButtons); }
     public static InlineKeyboardMarkup WeekScheduleSwitchersSetOnOne { get => new(_weekScheduleSwitchersSetOnOne); }
     public static InlineKeyboardMarkup WeekScheduleSwitchersSetOnTwo { get => new(_weekScheduleSwitchersSetOnTwo); }
+    public static InlineKeyboardMarkup WeeksToSendKeyboard { get => new(_weekToSendButtons); }
+    public static InlineKeyboardMarkup TimeOfDayKeyboard { get => new(_timeOfDayButtons); }
+    public static InlineKeyboardMarkup IncludeTodayKeyboard { get => new(_includeTodayButtons); }
 }

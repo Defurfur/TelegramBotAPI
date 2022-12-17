@@ -13,29 +13,44 @@ public class ProcessCallbackCommand : ICommand<ICommandArgs, Task<Message>>
     private readonly ICallbackMessageUpdater _messageUpdater;
     private readonly IUserUpdater _userUpdater;
     private readonly User _user;
+    private readonly SubscriptionSettings? _settings;
+ 
     public ProcessCallbackCommand(ICommandArgs args)
     {
         _user = args.User!;
+        _settings = args.User!.SubscriptionSettings;
         _callback = args.Callback!;
         _messageUpdater = args.CallbackMessageUpdater!;
         _userUpdater = args.UserUpdater!;
+        _settings = args.User!.SubscriptionSettings;
     }
 
     public async Task<Message> ExecuteAsync()
     {
+        await _userUpdater.ProcessCallbackAndSaveChanges(_settings!, _callback.Data!);
 
-
-        var result = _callback.Data switch
+        if(_settings.UpdateSchedule == UpdateSchedule.EveryWeek
+            && _callback.Data.Contains("TimeOfDay"))
         {
-            "Enable Subscription" => _messageUpdater.UpdateWithScheduleFrequencyOptionsKeyboard(_callback),
-            "Show Schedule: every day" => _messageUpdater.UpdateWithDayNumberOptionsKeyboard(_callback),
-            "Show Schedule: every week" => _messageUpdater.UpdateWithWeeklyScheduleOptionsKeyboard(_callback),
-            "Disable Subscription" => _messageUpdater.UpdateWithSubscriptionDisabled(_callback),
-            "Change subscription settings" => _messageUpdater.UpdateWithScheduleFrequencyOptionsKeyboard(_callback),
-            _ => _messageUpdater.UpdateWithSuccessMessage(_callback)
-        };
+            return await _messageUpdater.UpdateWithSuccessMessage(_settings!, _callback);
+        }
 
-        await _userUpdater.ProcessCallbackAndSaveChanges(_user, _callback.Data!);
+        if (_settings.UpdateSchedule == UpdateSchedule.EveryDay 
+            && _callback.Data.Contains("IncludeToday"))
+        {
+            return await _messageUpdater.UpdateWithSuccessMessage(_settings!, _callback);
+
+        }
+
+        var kvp= DictionaryStorage
+            .MessageUpdaterAndTasksDict
+            .FirstOrDefault(x => _callback.Data!.Contains(x.Key));
+
+        var task = kvp.Value;
+        var result = task != null 
+            ? kvp.Value.Invoke(_messageUpdater, _callback) 
+            : _messageUpdater.UpdateWithErrorMessage(_callback);
+
 
         return await result;
     }

@@ -53,6 +53,14 @@ public class ScheduleFormatter : IScheduleFormatter
         var result = EscapeCharacters(Sb.ToString());
         Sb.Clear();
         return result;
+    }  
+    public string Format(List<ScheduleDay> scheduleDays)
+    {
+        foreach(var scheduleDay in scheduleDays)
+            FormatScheduleDay(scheduleDay);
+        var result = EscapeCharacters(Sb.ToString());
+        Sb.Clear();
+        return result;
     }
 
     private void FormatReaClasses(List<ReaClass> reaClasses)
@@ -136,9 +144,9 @@ public class ScheduleFormatter : IScheduleFormatter
         var DayOfWeek = scheduleDay.DayOfWeekName.Pascalize();
 
         if (scheduleDay.Date == DateOnly.FromDateTime(DateTime.Now))
-            Sb.AppendFormat($"\r\n\u2757 -*{DayOfWeek}*-\r\n");
+            Sb.Append($"\r\n\u2757 -*{DayOfWeek}*-\r\n");
         else
-            Sb.AppendFormat($"\r\n-*{DayOfWeek}*-\r\n");
+            Sb.Append($"\r\n-*{DayOfWeek}*-\r\n");
 
 
         if (scheduleDay.IsEmpty)

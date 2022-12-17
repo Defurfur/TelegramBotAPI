@@ -23,7 +23,7 @@ public class ScheduleLoader : IScheduleLoader
     }
     /// <summary>
     /// Downloads <paramref name="user"/> group's schedule from context and formats it
-    /// to a further send as a telegram message.
+    /// to a further sending as a telegram message.
     /// </summary>
     /// <param name="user"></param>
     /// <exception cref="ArgumentNullException"></exception>
@@ -37,11 +37,47 @@ public class ScheduleLoader : IScheduleLoader
 
         return formattedSchedule;
     }
+    /// <summary>
+    /// Downloads <paramref name="user"/> group's schedule for <paramref name="dayAmount"/> days from today
+    /// and formats it to a further sending as a telegram message.
+    /// </summary>
+    /// <param name="user"></param>
+    /// <param name="dayAmount"></param>
+    /// <param name="startWithNextDay"></param>
+    /// <exception cref="ArgumentNullException"></exception>
+    /// <returns></returns>
+    public async Task<string> DownloadFormattedScheduleNDaysAsync(
+        User user,
+        int dayAmount,
+        bool startWithNextDay)
+    {
+        var scheduleDays = await _contextUpdateService
+            .DownloadNfollowingDaysFromSchedule(user, dayAmount, startWithNextDay);
+
+        ArgumentNullException.ThrowIfNull(scheduleDays, nameof(scheduleDays));
+
+        var formattedSchedule = _scheduleFormatter.Format(scheduleDays);
+
+        var dayAmountLastDigit = dayAmount % 10;
+
+        if (dayAmountLastDigit == 1)
+            return $"Расписание на следующий день: \r\n" + formattedSchedule;
+        
+        bool isFromTwoToFour = dayAmountLastDigit >= 2 && dayAmountLastDigit <= 4;
+
+
+
+        formattedSchedule = isFromTwoToFour
+            ? $"Расписание на следующие {dayAmount} дня: \r\n" + formattedSchedule
+            : $"Расписание на следующие {dayAmount} дней: \r\n" + formattedSchedule;
+
+        return formattedSchedule ?? string.Empty;
+    }
 
     /// <summary>
     /// Downloads <paramref name="user"/> group's schedule from context and formats its
     /// week's schedule defined by zero-based <paramref name="weekIndex"/> to a further
-    /// send as a telegram message. If 
+    /// sending as a telegram message. If 
     /// there is no week by <paramref name="weekIndex"/> returns empty string. 
     /// </summary>
     /// <param name="user"></param>
@@ -51,17 +87,21 @@ public class ScheduleLoader : IScheduleLoader
     public async Task<string> DownloadFormattedScheduleAsync(User user, int weekIndex )
     {
         var group = await _contextUpdateService.DownloadUserScheduleAsync(user);
+
         ArgumentNullException.ThrowIfNull(group, nameof(group));
         ArgumentNullException.ThrowIfNull(group.ScheduleWeeks, nameof(group.ScheduleWeeks));
 
-        var weekToFormat = group.ScheduleWeeks.ToList().ElementAtOrDefault(weekIndex);
+        var weekToFormat = group
+            .ScheduleWeeks
+            .ToList()
+            .ElementAtOrDefault(weekIndex);
 
-        string formattedSchedule = string.Empty;
+        var formattedSchedule = weekToFormat != null 
+            ? _scheduleFormatter.Format(weekToFormat)
+            : string.Empty;
 
-        if(weekToFormat is not null)
-        {
-            formattedSchedule = _scheduleFormatter.Format(weekToFormat);
-        }
+
+
 
         return formattedSchedule;
     }

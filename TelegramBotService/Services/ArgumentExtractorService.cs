@@ -81,7 +81,7 @@ public class ArgumentExtractorService : IArgumentExtractorService
                 "Загрузить расписание" => OperationType.DownloadScheduleRequest,
                 "Смена группы" => OperationType.ChangeGroupButtonPressed,
                 "Настройки подписки" => OperationType.ChangeSubscriptionSettingsRequest,
-                _ => OperationType.Other
+                _ => commandArgs.OperationType
             };
         }
         if (commandArgs.User != null
@@ -108,6 +108,7 @@ public class ArgumentExtractorService : IArgumentExtractorService
     {
         var user = _context
             .Users
+            .Include(x => x.SubscriptionSettings)
             .FirstOrDefault(x => x.ChatId == id);
         if (user == default)
             return null;

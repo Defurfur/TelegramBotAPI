@@ -3,6 +3,8 @@ using Coravel;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using ReaSchedule.DAL;
+using ReaSchedule.Models;
+using ScheduledActivities.Jobs;
 using ScheduleUpdateService.Abstractions;
 using ScheduleUpdateService.Extensions;
 using ScheduleUpdateService.Services;
@@ -40,6 +42,7 @@ builder.Services.AddDbContext<ScheduleDbContext>(options =>
 builder.Services.AddScoped<HandleUpdateService>();
 builder.Services.AddScheduleUpdateService(ServiceLifetime.Singleton);
 builder.Services.AddQueue();
+builder.Services.AddScheduler();
 builder.Services.AddSingleton<IBrowserWrapper, BrowserWrapper>();
 builder.Services.AddScoped<IContextUpdateService, ContextUpdateService>();
 builder.Services.AddSingleton<IMessageSender, MessageSender>();
@@ -50,10 +53,45 @@ builder.Services.AddScoped<IUserUpdater, UserUpdater>();
 builder.Services.AddSingleton<ICallbackMessageUpdater, CallbackMessageUpdater>();
 builder.Services.AddScoped<IScheduleLoader, ScheduleLoader>();
 builder.Services.AddSingleton<IScheduleFormatter, ScheduleFormatter>();
+builder.Services.AddSingleton<IUserSettingsFormatter, UserSettingsFormatter>();
 builder.Services.AddTransient<TryFindGroupAndChangeUserInvocable>();
 builder.Services.AddTransient<TryFindGroupAndRegisterUserInvocable>();
+builder.Services.AddTransient<SendScheduleToSubsDailyJob>();
+builder.Services.AddTransient<SendScheduleToSubsWeeklyJob>();
+
+
 
 var app = builder.Build();
+
+app.Services.UseScheduler(scheduler =>
+{
+    scheduler
+    .ScheduleWithParams<SendScheduleToSubsDailyJob>(TimeOfDay.Morning)
+    .DailyAtHour(7);
+
+    scheduler
+    .ScheduleWithParams<SendScheduleToSubsDailyJob>(TimeOfDay.Afternoon)
+    .DailyAtHour(13);
+    //.EveryTenMinutes();
+
+    scheduler
+    .ScheduleWithParams<SendScheduleToSubsDailyJob>(TimeOfDay.Evening)
+    .DailyAtHour(19);
+    
+    scheduler
+    .ScheduleWithParams<SendScheduleToSubsWeeklyJob>(TimeOfDay.Morning)
+    .DailyAtHour(7);
+
+    scheduler
+    .ScheduleWithParams<SendScheduleToSubsWeeklyJob>(TimeOfDay.Afternoon)
+    .EveryTenMinutes();
+    //.DailyAtHour(13);
+
+    scheduler
+    .ScheduleWithParams<SendScheduleToSubsWeeklyJob>(TimeOfDay.Evening)
+    .DailyAtHour(19);
+
+});
 
 if (app.Environment.IsDevelopment())
 {
@@ -72,7 +110,6 @@ app.MapPost($"/bot/{botConfig.EscapedBotToken}", async (
     NewtonsoftJsonUpdate update) =>
 {
     await handleUpdateService.EchoAsync(update);
-    Console.WriteLine(JsonConvert.SerializeObject(update));
 
     return Results.Ok();
 })

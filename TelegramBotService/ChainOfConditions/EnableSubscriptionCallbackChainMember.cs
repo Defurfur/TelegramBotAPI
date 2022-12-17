@@ -10,7 +10,7 @@ using TelegramBotService.Models;
 
 namespace TelegramBotService.ChainOfConditions;
 
-public class ProcessCallbackChainMember : AbstractMessageChainMember
+public class EnableSubscriptionCallbackChainMember : AbstractMessageChainMember
 {
     public override ICommand<ICommandArgs, Task<Message>>? Handle(ICommandArgs args)
     {
@@ -18,12 +18,12 @@ public class ProcessCallbackChainMember : AbstractMessageChainMember
             args.User != null
             && args.User.SubscriptionSettings != null
             && args.Callback != null
-            && args.Callback.Data != null
+            && args.Callback.Data == "Enable Subscription"
             && args.CallbackMessageUpdater != null
             && args.UserUpdater != null;
 
         if (condition)
-            return new ProcessCallbackCommand(args);
+            return new EnableSubscriptionCommand(args);
         else
             return base.Handle(args);
     }

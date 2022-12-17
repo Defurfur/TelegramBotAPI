@@ -3,16 +3,20 @@ using Telegram.Bot;
 using Telegram.Bot.Types.ReplyMarkups;
 using TelegramBotService.Abstractions;
 using Message = Telegram.Bot.Types.Message;
+using Humanizer;
 
 namespace TelegramBotService.Services;
 
 public class MessageSender : IMessageSender
 {
     private readonly ITelegramBotClient _bot;
+    private readonly IUserSettingsFormatter _settingsFormatter;
 
-    public MessageSender(ITelegramBotClient bot)
+    public MessageSender(ITelegramBotClient bot,
+        IUserSettingsFormatter settingsFormatter)
     {
         _bot = bot;
+        _settingsFormatter = settingsFormatter;
     }
 
     public async Task<Message> ShowStartMessage(Message message)
@@ -64,7 +68,7 @@ public class MessageSender : IMessageSender
             text : "Группа успешно изменена!"
             );
     }
-    public async Task<Message> SendSubscriptionSettings(Message message)
+    public async Task<Message> SendDefaultSubscriptionSettings(Message message)
     {
 
         return await _bot.SendTextMessageAsync(
@@ -72,14 +76,41 @@ public class MessageSender : IMessageSender
             text : "Подписка позволяет получать расписание автоматически в указанное вами время."
             + "Например, вы можете получать недельное расписание каждую неделю в указанный вами день, либо" 
             + "получать расписание на день в день занятия.",
-            replyMarkup: CustomKeyboardStorage.SubscriptionDisabledKeyboard
+            replyMarkup: CustomKeyboardStorage.NoSubscriptionKeyboard
             );
     }
+    public async Task<Message> SendSubscriptionSettings(
+        SubscriptionSettings settings,
+        Message message,
+        bool subscriptionEnabled)
+    {
+        var keyboard = subscriptionEnabled == true
+            ? CustomKeyboardStorage.SubscriptionEnabledKeyboard
+            : CustomKeyboardStorage.SubscriptionDisabledKeyboard;
+
+        string formattedSettings = _settingsFormatter.Format(settings);
+
+        return await _bot.SendTextMessageAsync(
+            parseMode: Telegram.Bot.Types.Enums.ParseMode.MarkdownV2,
+            chatId: message!.Chat.Id,
+            text: "*Ваши текущие настройки:* \r\n\r\n" + formattedSettings,
+            replyMarkup: keyboard
+            );
+    }
+
     public async Task<Message> SendMessageWithSomeText(Message message, string text)
     {
         return await _bot.SendTextMessageAsync(
             parseMode: Telegram.Bot.Types.Enums.ParseMode.MarkdownV2,
             chatId: message!.Chat.Id,
+            text: text
+            );
+    }    
+    public async Task<Message> SendMessageWithSomeText(long chatId, string text)
+    {
+        return await _bot.SendTextMessageAsync(
+            parseMode: Telegram.Bot.Types.Enums.ParseMode.MarkdownV2,
+            chatId: chatId,
             text: text
             );
     }
