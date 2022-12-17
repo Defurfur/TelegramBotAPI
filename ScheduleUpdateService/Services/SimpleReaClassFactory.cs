@@ -15,7 +15,7 @@ namespace ScheduleUpdateService.Services
     {
         #region Regex fields
         private readonly Regex _classNameRE = new(@"(?<=(<h5>))((\w+ *-*)+)");
-        private readonly Regex _classTypeRE = new(@"(?<=(<strong>))((\w+ *)+)");
+        private readonly Regex _classTypeRE = new(@"(?<=(<strong>))((\w+ *-*)+)");
         private readonly Regex _classSubgroupRE = new(@"(?<=(data-subgroup=.))([a-z0-9A-Zа-яА-Я]+)");
         private readonly Regex _classOrdinalNumberRE = new(@"(\d{1}\s+пара)");
         private readonly Regex _professorRE = new(@"(?<=\?q=)((\w+ *)+)");

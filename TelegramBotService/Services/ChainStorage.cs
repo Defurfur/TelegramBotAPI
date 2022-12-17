@@ -16,6 +16,7 @@ public static class ChainStorage
         new TryChangeGroupChainMember(),
         new ChangeSubscriptionSettingsChainMember(),
         new StartMessageChainMember(),
+        new BugChainMember(),
         new GroupInputFalseChainMember(),
         new GroupInputTrueChainMember(),
         new DownloadScheduleChainMember(),

@@ -19,6 +19,7 @@ namespace TelegramBotService.Abstractions
         ICallbackMessageUpdater? CallbackMessageUpdater { get; set; }
         IUserUpdater? UserUpdater { get; set; }
         IScheduleLoader? ScheduleLoader { get; set; }
+        IContextUpdateService? ContextUpdateService { get; set; }
     }
 
 

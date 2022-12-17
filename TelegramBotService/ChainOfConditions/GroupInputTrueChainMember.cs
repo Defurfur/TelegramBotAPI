@@ -10,7 +10,7 @@ public class GroupInputTrueChainMember : AbstractMessageChainMember
     public override ICommand<ICommandArgs, Task<Message>>? Handle(ICommandArgs args)
     {
         bool condition = args.User == null
-            && args.OperationType == OperationType.IsGroupInput
+            && args.OperationType == OperationType.GroupInput
             && args.Update.Message != null;
 
         if (condition)

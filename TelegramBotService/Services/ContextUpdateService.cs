@@ -61,6 +61,17 @@ namespace TelegramBotService.Services
                 return;
 
             await TryRegisterUserAsync(group, chatId);
+        }  
+        public async Task AddBug(long chatId, string text, int userId = 0)
+        {
+            var bug = new Bug() { 
+                ChatId = chatId,
+                Text = text,
+                UserId = userId };
+
+            _context.Add(bug);
+
+            await _context.SaveChangesAsync();
         }
 
 

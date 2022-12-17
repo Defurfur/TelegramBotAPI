@@ -4,6 +4,7 @@ namespace TelegramBotService.Abstractions
 {
     public interface IContextUpdateService
     {
+        Task AddBug(long chatId, string text, int userId = 0);
         Task<ReaGroup> CreateNewReaGroup(string groupName);
         Task<List<ScheduleDay>> DownloadNfollowingDaysFromSchedule(User user, int dayAmount, bool startWithNextDay);
         Task<ReaGroup?> DownloadUserScheduleAsync(User user);

@@ -13,8 +13,9 @@ namespace TelegramBotService.Models
     }
     public enum OperationType
     {
-        IsStartCommand,
-        IsGroupInput,
+        StartCommand,
+        GroupInput,
+        BugCommand,
         GroupChangeCommand,
         DownloadScheduleRequest,
         ChangeGroupButtonPressed,

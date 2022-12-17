@@ -17,4 +17,5 @@ public class CommandArgs : ICommandArgs
     public IMessageSender? MessageSender { get; set; }
     public IGroupSearchPipeline? GroupSearchPipeline { get; set; }
     public IScheduleLoader? ScheduleLoader { get; set; } 
+    public IContextUpdateService? ContextUpdateService { get; set; }
 }

@@ -17,6 +17,7 @@ public class ArgumentExtractorService : IArgumentExtractorService
     private readonly ICallbackMessageUpdater _callbackMessageUpdater;
     private readonly IUserUpdater _userUpdater;
     private readonly IScheduleLoader _scheduleLoader;
+    private readonly IContextUpdateService _contextUpdateService;
 
     public ArgumentExtractorService(
         ScheduleDbContext context,
@@ -24,7 +25,8 @@ public class ArgumentExtractorService : IArgumentExtractorService
         IGroupSearchPipeline groupSearchPipeline,
         ICallbackMessageUpdater callbackMessageUpdater,
         IUserUpdater userUpdater,
-        IScheduleLoader scheduleLoader)
+        IScheduleLoader scheduleLoader,
+        IContextUpdateService contextUpdateService)
     {
         _context = context;
         _messageSender = messageSender;
@@ -32,6 +34,7 @@ public class ArgumentExtractorService : IArgumentExtractorService
         _callbackMessageUpdater = callbackMessageUpdater;
         _userUpdater = userUpdater;
         _scheduleLoader = scheduleLoader;
+        _contextUpdateService = contextUpdateService;
     }
 
     public ICommandArgs GetArgs(Update update)
@@ -57,12 +60,20 @@ public class ArgumentExtractorService : IArgumentExtractorService
 
         commandArgs.GroupSearchPipeline = _groupSearchPipeline;
 
+        if (commandArgs.Update.Message != null 
+            && commandArgs.Update.Message.Text != null
+            && commandArgs.Update.Message.Text.Contains("/bug")
+           )
+        {
+            commandArgs.OperationType = OperationType.BugCommand;
+            commandArgs.ContextUpdateService = _contextUpdateService;
+        }
 
         if (commandArgs.User == null
             && commandArgs.UpdateType == UpdateType.Message
             && TryGetStartCommand(update))
         {
-            commandArgs.OperationType = OperationType.IsStartCommand;
+            commandArgs.OperationType = OperationType.StartCommand;
         }
 
 
@@ -71,7 +82,7 @@ public class ArgumentExtractorService : IArgumentExtractorService
             && update.Message!.Text != null
             && CheckMessageForGroupInput(update.Message.Text))
         {
-            commandArgs.OperationType = OperationType.IsGroupInput;
+            commandArgs.OperationType = OperationType.GroupInput;
         }
 
         if(commandArgs.User != null && update.Message != null)

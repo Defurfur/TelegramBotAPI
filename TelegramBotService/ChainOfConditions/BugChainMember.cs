@@ -6,17 +6,17 @@ using TelegramBotService.Services;
 
 namespace TelegramBotService.ChainOfConditions;
 
-public class StartMessageChainMember : AbstractMessageChainMember
+public class BugChainMember : AbstractMessageChainMember
 {
     public override ICommand<ICommandArgs, Task<Message>>? Handle(ICommandArgs args)
     {
         bool condition =
-            args.User == null &&
-            args.OperationType == OperationType.StartCommand &&
-            args.Update.Message != null;
+            args.OperationType == OperationType.BugCommand
+            && args.Update.Message != null
+            && args.ContextUpdateService != null;
 
         if (condition)
-            return new ShowStartMessageCommand(args);
+            return new BugCommand(args);
         else
             return base.Handle(args);
     }

@@ -40,6 +40,7 @@ public class ScheduleDbContext : DbContext
     public DbSet<ScheduleDay> ScheduleDays { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<SubscriptionSettings> Settings { get; set; }
+    public DbSet<Bug> Bugs{ get; set; }
 
     
 
