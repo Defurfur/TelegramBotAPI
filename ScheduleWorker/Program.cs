@@ -52,22 +52,29 @@ host.Services
 {
     scheduler
        .Schedule<UpdateGroupsScheduleJob>()
-       .DailyAtHour(10);
+       .DailyAtHour(10)
+       .PreventOverlapping("Updater");
     scheduler
         .Schedule<UpdateGroupsScheduleJob>()
-        .DailyAtHour(14);
+        .DailyAtHour(14)
+        .PreventOverlapping("Updater");
     scheduler
         .Schedule<UpdateGroupsScheduleJob>()
-        .DailyAtHour(18);
+        .DailyAtHour(18)
+        .PreventOverlapping("Updater");
     scheduler
         .Schedule<UpdateGroupsScheduleJob>()
-        .DailyAtHour(22);
+        .DailyAtHour(22)
+        .PreventOverlapping("Updater")
+        .RunOnceAtStart();
     scheduler
         .Schedule<UpdateGroupsScheduleJob>()
-        .DailyAtHour(2);
+        .DailyAtHour(2)
+        .PreventOverlapping("Updater");
     scheduler
         .Schedule<UpdateGroupsScheduleJob>()
-        .DailyAtHour(6);
+        .DailyAtHour(6)
+        .PreventOverlapping("Updater");
 
 })
     .LogScheduledTaskProgress(host.Services.GetService<ILogger<IScheduler>>());

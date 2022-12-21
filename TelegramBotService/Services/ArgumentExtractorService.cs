@@ -5,6 +5,8 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using TelegramBotService.Abstractions;
 using TelegramBotService.Models;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using Update = Telegram.Bot.Types.Update;
 using User = ReaSchedule.Models.User;
 
 namespace TelegramBotService.Services;
@@ -41,118 +43,193 @@ public class ArgumentExtractorService : IArgumentExtractorService
     {
         ArgumentNullException.ThrowIfNull(update);
 
-        ICommandArgs commandArgs = new CommandArgs() { Update = update };
+        ICommandArgs args = new CommandArgs() {
+            Update = update,
+            UpdateType = update.Type,
+            Callback = update.CallbackQuery,
+            GroupSearchPipeline = _groupSearchPipeline,
+            MessageSender = _messageSender,
 
-        if(update.Message is not null || update.CallbackQuery is not null)
-        {
-            var chatId = update.Message == null 
-                ? update.CallbackQuery!.Message!.Chat.Id 
-                : update.Message.Chat.Id;
+        };
 
-            commandArgs.User = TryGetUser(chatId);
-        }
+        args = TryGetUser(args);
 
-        commandArgs.MessageSender = _messageSender;
+        args = ProcessMessageText(args);
 
-        commandArgs.Callback = update.CallbackQuery;
+        args = ProcessCallback(args);
 
-        commandArgs.UpdateType = update.Type;
-
-        commandArgs.GroupSearchPipeline = _groupSearchPipeline;
-
-        if (commandArgs.Update.Message != null 
-            && commandArgs.Update.Message.Text != null
-            && commandArgs.Update.Message.Text.Contains("/bug")
-           )
-        {
-            commandArgs.OperationType = OperationType.BugCommand;
-            commandArgs.ContextUpdateService = _contextUpdateService;
-        }
-
-        if (commandArgs.User == null
-            && commandArgs.UpdateType == UpdateType.Message
-            && TryGetStartCommand(update))
-        {
-            commandArgs.OperationType = OperationType.StartCommand;
-        }
-
-
-        if (commandArgs.User == null
-            && commandArgs.UpdateType == UpdateType.Message
-            && update.Message!.Text != null
-            && CheckMessageForGroupInput(update.Message.Text))
-        {
-            commandArgs.OperationType = OperationType.GroupInput;
-        }
-
-        if(commandArgs.User != null && update.Message != null)
-        {
-            commandArgs.OperationType = update.Message.Text switch
-            {
-                "Загрузить расписание" => OperationType.DownloadScheduleRequest,
-                "Смена группы" => OperationType.ChangeGroupButtonPressed,
-                "Настройки подписки" => OperationType.ChangeSubscriptionSettingsRequest,
-                _ => commandArgs.OperationType
-            };
-        }
-        if (commandArgs.User != null
-            && update.Message != null
-            && update.Message.Text!.Split(' ')[0] == "/change"
-            && update.Message.Text!.Split(' ').Length == 2
-            && CheckMessageForGroupInput(update.Message.Text.Split(' ')[1]))
-        {
-            commandArgs.OperationType = OperationType.GroupChangeCommand;
-            commandArgs.Update.Message!.Text = update.Message.Text.Replace("/change ", "").Trim();
-        }
-
-        if (commandArgs.OperationType == OperationType.DownloadScheduleRequest)
-            commandArgs.ScheduleLoader = _scheduleLoader;
-
-        commandArgs = ProcessCallback(commandArgs, update);
-
-
-
-
-        return commandArgs;
+        return args;
     }
-    private User? TryGetUser(long id)
+
+    private ICommandArgs TryGetUser(ICommandArgs args)
     {
+        if (args.Update.Message is null && args.Update.CallbackQuery is null)
+            return args;
+
+        var chatId = args.Update.Message == null
+            ? args.Update.CallbackQuery!.Message!.Chat.Id
+            : args.Update.Message.Chat.Id;
+
         var user = _context
             .Users
             .Include(x => x.SubscriptionSettings)
-            .FirstOrDefault(x => x.ChatId == id);
-        if (user == default)
-            return null;
-        return user;
+            .FirstOrDefault(x => x.ChatId == chatId);
+
+        args.User = user;
+
+        return args;
+
     }
-    private bool TryGetStartCommand(Update update)
+
+    private ICommandArgs ProcessMessageText(ICommandArgs args)
     {
-        if (update.Message!.Text == null)
-            return false;
-        return update.Message.Text.Split(' ')[0] == "/start";
+        bool condition = 
+            args.Update.Type == UpdateType.Message
+            && args.Update.Message != null
+            && args.Update.Message.Text != null;
+
+        if (!condition)
+            return args;
+
+        var text = args.Update.Message!.Text!;
+
+        args = TryGetBugCommand(args);
+
+        args = ProcessExistingUser(args);
+
+        args = ProcessNotExistingUser(args);
+
+        return args;
+
+        ICommandArgs TryGetBugCommand(ICommandArgs args)
+        {
+            bool innerCondition = text.Contains("/bug");
+
+            if (!innerCondition)
+                return args;
+
+            args.OperationType = OperationType.BugCommand;
+            args.ContextUpdateService = _contextUpdateService;
+
+            return args;
+        }
+
+        ICommandArgs ProcessExistingUser(ICommandArgs args)
+        {
+            bool innerCondition = args.User != null;
+
+            if (!innerCondition) 
+                return args;
+
+            args = TryGetKeyboardCommand(args);
+            args = TryGetChangeGroupCommand(args);
+
+            return args;
+
+
+
+            ICommandArgs TryGetKeyboardCommand(ICommandArgs args)
+            {
+                args.OperationType = args.Update!.Message!.Text switch
+                {
+                    "Загрузить расписание" => OperationType.DownloadScheduleRequest,
+                    "Смена группы" => OperationType.ChangeGroupButtonPressed,
+                    "Настройки подписки" => OperationType.ChangeSubscriptionSettingsRequest,
+                    _ => args.OperationType
+                };
+
+                if (args.OperationType == OperationType.DownloadScheduleRequest)
+                    args.ScheduleLoader = _scheduleLoader;
+
+                if (args.OperationType == OperationType.ChangeGroupButtonPressed)
+                    args.UserUpdater = _userUpdater;
+
+                return args;
+            }
+
+            ICommandArgs TryGetChangeGroupCommand(ICommandArgs args)
+            {
+                var text = args.Update.Message!.Text!;
+                var textSplit = text.Split(" ");
+
+                if (textSplit.Length != 2 || textSplit[0] != "/change")
+                    return args;
+
+                var groupAsString = textSplit[1];
+
+                bool firstCondition =
+                !groupAsString.Contains(' ')
+                && groupAsString.Contains('.')
+                && groupAsString.Contains('/')
+                && groupAsString.Contains('-')
+                && groupAsString.Length >= 13
+                && groupAsString.Length <= 19;
+
+                bool secondCondition = groupAsString.StartsWith("97в/") || groupAsString.StartsWith("97з/");
+
+                if(firstCondition || secondCondition)
+                {
+                    args.OperationType = OperationType.GroupChangeCommand;
+                    args.UserUpdater = _userUpdater;
+                    args.Update.Message!.Text = text.Replace("/change ", "").Trim();
+                }
+
+                return args;
+
+
+            }
+        }
+
+        ICommandArgs ProcessNotExistingUser(ICommandArgs args)
+        {
+            bool innerCondition = args.User == null;
+
+            if (!innerCondition) 
+                return args;
+
+            args = CheckMessageForGroupInput(args);
+            args = TryGetStartCommand(args);
+
+            return args;
+
+            ICommandArgs CheckMessageForGroupInput(ICommandArgs args)
+            {
+                var text = args.Update.Message!.Text!.ToLower().Trim();
+
+                bool firstCondition =
+               !text.Contains(' ')
+               && text.Contains('.')
+               && text.Contains('/')
+               && text.Contains('-')
+               && text.Length >= 13
+               && text.Length <= 19;
+
+                bool secondCondition = text.StartsWith("97в/") || text.StartsWith("97з/");
+
+                if (firstCondition || secondCondition)
+                    args.OperationType = OperationType.GroupInput;
+
+                return args;
+            }
+            ICommandArgs TryGetStartCommand(ICommandArgs args)
+            {
+                var text = args.Update.Message!.Text!;
+
+                if (text is null)
+                    return args;
+
+                if (text.Split(' ').FirstOrDefault() == "/start")
+                    args.OperationType = OperationType.StartCommand;
+
+                return args;
+            }
+        }
+        
     }
-    private bool CheckMessageForGroupInput(string text)
+    private ICommandArgs ProcessCallback(ICommandArgs args)
     {
-        var cleanedText = text.ToLower().Trim();
 
-        bool firstCondition =
-            !cleanedText.Contains(' ')
-            && cleanedText.Contains('.')
-            && cleanedText.Contains('/')
-            && cleanedText.Contains('-')
-            && cleanedText.Length >= 13
-            && cleanedText.Length <= 19;
-
-        bool secondCondition = cleanedText.StartsWith("97в/") || cleanedText.StartsWith("97з/");
-
-
-        return firstCondition || secondCondition;
-    }
-    private ICommandArgs ProcessCallback(ICommandArgs args, Update update)
-    {
-        args.Callback = update.CallbackQuery;
-
-        if (args.Callback is null)
+        if (args.Callback is null || args.Callback.Data is null)
             return args;
 
         if (args.Callback.Data.Contains("ScheduleSwitcher"))

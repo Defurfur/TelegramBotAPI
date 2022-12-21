@@ -61,41 +61,43 @@ public class CallbackMessageUpdater : ICallbackMessageUpdater
     public async Task<Message> UpdateWithWeekToSendKeyboard(CallbackQuery callback)
     {
         return await _bot.EditMessageTextAsync(
+            parseMode: Telegram.Bot.Types.Enums.ParseMode.Html,
             chatId: callback.Message.Chat.Id,
             messageId: callback.Message.MessageId,
-            text: "Расписание какой недели вам присылать. \r\n" +
-            "Например, если вы получаете расписание в пятницу и выбрали первый вариант " +
-            "- вы получите расписание недели, содержащее эту пятницу.\r\n" +
-            "Если вы выбрали второй вариант - вы получите расписание следующей недели",
+            text: "<b>Выберите, расписание какой недели вам присылать.</b> \r\n" +
+            "Первый вариант позволяет получать расписание недели, содержащей день отправки. " +
+            "Второй вариант - следующей после нее.",
             replyMarkup: CustomKeyboardStorage.WeeksToSendKeyboard
             );
     }
     public async Task<Message> UpdateWithTimeOfDayKeyboard(CallbackQuery callback)
     {
         return await _bot.EditMessageTextAsync(
+            parseMode: Telegram.Bot.Types.Enums.ParseMode.Html,
             chatId: callback.Message.Chat.Id,
             messageId: callback.Message.MessageId,
-            text: "Выберите, в какое время суток присылать расписание",
+            text: "<b>Выберите, в какое время суток присылать расписание</b>",
             replyMarkup: CustomKeyboardStorage.TimeOfDayKeyboard
             );
     }
     public async Task<Message> UpdateWithIncludeTodayKeyboard(CallbackQuery callback)
     {
         return await _bot.EditMessageTextAsync(
+            parseMode: Telegram.Bot.Types.Enums.ParseMode.Html,
             chatId: callback.Message.Chat.Id,
             messageId: callback.Message.MessageId,
-            text: "Выберите должно ли расписание содержать тот день, в которое оно присылается \r\n" +
-            "Например, если вы выбрали рассылку на 2 дня каждый день и выбрали первый вариант - " +
-            "расписание будет содержать пары на 'сегодня' и 'завтра'. В ином случае - на 'завтра' и 'послезавтра'. ",
+            text: "<b>Выберите должно ли сообщение с расписанием включать день отправки. \r\n</b>" +
+            "При выборе 'нет' - каждый день вы будете получать расписание, начинающееся с 'завтра'.",
             replyMarkup: CustomKeyboardStorage.IncludeTodayKeyboard
             );
     }
     public async Task<Message> UpdateWithWeeklyScheduleOptionsKeyboard(CallbackQuery callback)
     {
         return await _bot.EditMessageTextAsync(
+            parseMode: Telegram.Bot.Types.Enums.ParseMode.Html,
             chatId: callback.Message.Chat.Id,
             messageId: callback.Message.MessageId,
-            text: "В какой день вы хотите получать недельное расписание?",
+            text: "<b>В какой день вы хотите получать недельное расписание?</b>",
             replyMarkup: CustomKeyboardStorage.WeeklyScheduleOptionsKeyboard
             );
     }
@@ -110,7 +112,7 @@ public class CallbackMessageUpdater : ICallbackMessageUpdater
             chatId: callback.Message.Chat.Id,
             messageId: callback.Message.MessageId,
             text: "*Настройки подписки успешно сохранены\\!* " +
-            "\r\n Теперь они выглядят так: \r\n\r\n" + formattedSettings,
+            "\r\nТеперь они выглядят так: \r\n\r\n" + formattedSettings,
             replyMarkup: CustomKeyboardStorage.SubscriptionEnabledKeyboard
             );
     }

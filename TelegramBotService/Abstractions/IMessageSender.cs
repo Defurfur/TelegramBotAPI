@@ -10,7 +10,7 @@ public interface IMessageSender
     Task<Message> InvalidGroupInputMessage(Message message);
     Task<Message> GroupNotFoundMessage(Message message);
     Task<Message> SendDefaultSubscriptionSettings(Message message);
-    Task<Message> SendChangeGroupInfo(Message message);
+    Task<Message> SendChangeGroupInfo(Message message, string groupName);
     Task<Message> ChangeGroupSuccess(Message message);
     Task<Message> SendMessageWithSomeText(Message message, string text);
     Task<Message> SomethingWentWrongMessage(Message message);

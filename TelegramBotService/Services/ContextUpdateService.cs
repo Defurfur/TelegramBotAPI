@@ -158,14 +158,17 @@ namespace TelegramBotService.Services
             int dayAmount,
             bool startWithNextDay)
         {
-            var today = DateOnly.FromDateTime(DateTime.Now);
-            var dateList = new List<DateOnly>();
+            var startDay = DateOnly.FromDateTime(DateTime.Now);
 
-            var i = startWithNextDay ? 1 : 0;
+            if(startWithNextDay) 
+            {
+                startDay = startDay.AddDays(1);
+            }
+            var dateList = new List<DateOnly>();
 
             for(var x = 0; x < dayAmount; x++)
             {
-                dateList.Add(DateOnly.FromDayNumber(today.DayNumber + x + i));
+                dateList.Add(DateOnly.FromDayNumber(startDay.DayNumber + x));
             }
 
             var reaGroup = await _context
@@ -182,7 +185,9 @@ namespace TelegramBotService.Services
             if(reaGroup is null )
                 return scheduleDays;
 
-            reaGroup.ScheduleWeeks!.ForEach(x => scheduleDays.AddRange(x.ScheduleDays));
+            reaGroup
+                .ScheduleWeeks!
+                .ForEach(x => scheduleDays.AddRange(x.ScheduleDays));
 
             return scheduleDays;
         }

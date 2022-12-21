@@ -55,10 +55,7 @@ namespace TelegramBotService.Services
         }
         private void FormatWeeklySubscriptionSettings(SubscriptionSettings settings)
         {
-            string includeTodayString = settings.IncludeToday
-                ? "_да_"
-                : "_нет (со следующего)_";
-
+  
             string subscriptionState = settings.SubscriptionEnabled
                 ? "Подписка: _включена_"
                 : "Подписка: _выключена_";
@@ -67,7 +64,6 @@ namespace TelegramBotService.Services
             Sb.AppendLine($"Присылать раписание: _{settings.UpdateSchedule.Humanize()}_");
             Sb.AppendLine($"На: _{settings.WeekToSend.Humanize()}_");
             Sb.AppendLine($"День обновления: _{settings.DayOfUpdate.Humanize()}_");
-            Sb.AppendLine("Включать день отправки: " + includeTodayString);
             Sb.AppendLine($"Присылать: _{settings.TimeOfDay.Humanize()}_");
         }
         private void EscapeCharacters()

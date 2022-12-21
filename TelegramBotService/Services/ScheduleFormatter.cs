@@ -174,7 +174,9 @@ public class ScheduleFormatter : IScheduleFormatter
             .Replace("""\""", """\\""")
             .Replace(".", """\.""")
             .Replace("-", """\-""")
-            .Replace("+", """\+""");
+            .Replace("+", """\+""")
+            .Replace("(", """\(""")
+            .Replace(")", """\)""");
     }
 
     private string CapitalizeFirstLetter(string text)

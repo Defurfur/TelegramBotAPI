@@ -11,6 +11,7 @@ using Coravel.Invocable;
 using ScheduleUpdateService.Abstractions;
 using System.Diagnostics;
 using Humanizer;
+using System.Diagnostics.Metrics;
 
 namespace ScheduledActivities.Jobs;
 
@@ -33,6 +34,36 @@ public class UpdateGroupsScheduleJob : IInvocable
     public async Task Invoke()
     {
         var stopwatch = Stopwatch.StartNew();
+        int updatedGroupCounter = 0;
+
+        try
+        {
+           updatedGroupCounter = await Process();
+        }        
+        catch(Exception ex)
+        {
+            _logger.LogInformation(
+                ex,
+                "{ExceptionName} has been thrown during {ClassType} execution",
+                ex.GetType().Name,
+                GetType().Name
+                );
+        }
+        finally
+        {
+            stopwatch.Stop();
+            _logger.LogInformation("{UpdatedGroupsNumber} groups' schedules have changed" +
+                " and been updated in the database. Task took {Time} to finish",
+                updatedGroupCounter,
+                stopwatch.Elapsed.Humanize(2));
+        }
+
+
+    }
+
+    private async Task<int> Process()
+    {
+        int counter = 0;
         var reaGroupList = await _context
        .ReaGroups
        .Include(x => x.ScheduleWeeks!)
@@ -46,7 +77,8 @@ public class UpdateGroupsScheduleJob : IInvocable
             reaGroupList.Count);
 
         var tasks = reaGroupList
-            .Select(x => _parserPipeline.ParseAndUpdate(x));
+            .Select(_parserPipeline.ParseAndUpdate);
+
         var results = await Task.WhenAll(tasks);
 
         var joinedGroups = reaGroupList.Join(
@@ -55,7 +87,6 @@ public class UpdateGroupsScheduleJob : IInvocable
             y => y.Id,
             (x, y) => (x, y));
 
-        int updatedGroupCounter = 0;
 
         foreach (var (oldG, newG) in joinedGroups)
         {
@@ -63,18 +94,11 @@ public class UpdateGroupsScheduleJob : IInvocable
             {
                 oldG.ScheduleWeeks = newG.ScheduleWeeks;
                 oldG.Hash = newG.Hash;
-                updatedGroupCounter++;
+                counter++;
             }
-
         }
 
         await _context.SaveChangesAsync();
-        stopwatch.Stop();
-        _logger.LogInformation("{UpdatedGroupsNumber} groups' schedules have changed" +
-            " and been updated in the database. Task took {Time} to finish",
-            updatedGroupCounter,
-            stopwatch.Elapsed.Humanize(2));
-
-
+        return counter;
     }
 }

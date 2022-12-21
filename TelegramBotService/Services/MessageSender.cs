@@ -22,60 +22,68 @@ public class MessageSender : IMessageSender
     public async Task<Message> ShowStartMessage(Message message)
     {
         return await _bot.SendTextMessageAsync(
+            parseMode: Telegram.Bot.Types.Enums.ParseMode.Html,
             chatId: message!.Chat.Id,
-            text: "Приветствую! Вы запустили бот расписания университета РЭУ им. Плеханова." +
-            " Чтобы начать пользоваться ботом, напишите название группы, для которой вы хотите посмотреть расписание");
+            text: "<b>Приветствую! Вы запустили бот расписания университета РЭУ им. Плеханова.</b>\r\n" +
+            "Чтобы начать пользоваться ботом, напишите название группы, для которой вы хотите посмотреть расписание");
     }
     public async Task<Message> GroupFoundMessage(Message message)
     {
         return await _bot.SendTextMessageAsync(
+            parseMode: Telegram.Bot.Types.Enums.ParseMode.Html,
             chatId: message!.Chat.Id,
-            text: "Группа найдена! Теперь вы можете пользоваться ботом!",
+            text: "<b>Группа найдена! Теперь вы можете пользоваться ботом!</b>",
             replyMarkup: CustomKeyboardStorage.DefaultReplyKeyboard
             );
     } 
     public async Task<Message> InvalidGroupInputMessage(Message message)
     {
         return await _bot.SendTextMessageAsync(
+            parseMode: Telegram.Bot.Types.Enums.ParseMode.Html,
             chatId: message!.Chat.Id,
-            text: "Неправильно введена группа." +
-                " Удалите пробелы и убедитесь, что вы правильно написали номер. Если вы уверены," +
-                "что написали номер группы правильно, но все еще получаете это сообщение" +
-                " - скопируйте название группы из личного кабинета или сайта с расписанием");
+            text: "<b>Неправильно введена группа.</b>\r\n" +
+                "Удалите пробелы и убедитесь, что вы правильно написали номер.\r\n\r\n" +
+                "<i>Если вы уверены, что написали номер группы правильно, но все еще получаете это сообщение" +
+                " - скопируйте название группы из личного кабинета или сайта с расписанием</i>");
     } 
     public async Task<Message> GroupNotFoundMessage(Message message)
     {
 
         return await _bot.SendTextMessageAsync(
+            parseMode: Telegram.Bot.Types.Enums.ParseMode.Html,
             chatId: message!.Chat.Id,
-            text: "Группа не найдена ни в базе, " +
-            "ни в расписании. Убедитесь, что правильно ввели название группы");
+            text: "<b>Группа не найдена ни в базе, " +
+            "ни в расписании.</b>\r\n Убедитесь, что правильно ввели название группы");
     } 
-    public async Task<Message> SendChangeGroupInfo(Message message)
+    public async Task<Message> SendChangeGroupInfo(Message message, string groupName)
     {
 
         return await _bot.SendTextMessageAsync(
+            parseMode: Telegram.Bot.Types.Enums.ParseMode.Html,
             chatId: message!.Chat.Id,
-            text: "Чтобы поменять группу, введите /change <название группы>" +
-            "\r\nНапример, /change 15.02Д-ММ2/19б"
+            text: $"<b>Ваша такущая группа: {groupName}</b>\r\n\r\n" + 
+            "Чтобы поменять группу, введите: \r\n /change номер группы" +
+            "\r\n<i>Например:\r\n /change 15.02д-мм2/19б</i>"
             ); 
     }
     public async Task<Message> ChangeGroupSuccess(Message message)
     {
 
         return await _bot.SendTextMessageAsync(
+            parseMode: Telegram.Bot.Types.Enums.ParseMode.Html,
             chatId : message!.Chat.Id,
-            text : "Группа успешно изменена!"
+            text : "<b>Группа успешно изменена!</b>"
             );
     }
     public async Task<Message> SendDefaultSubscriptionSettings(Message message)
     {
 
         return await _bot.SendTextMessageAsync(
+            parseMode: Telegram.Bot.Types.Enums.ParseMode.Html,
             chatId : message!.Chat.Id,
-            text : "Подписка позволяет получать расписание автоматически в указанное вами время."
+            text : "<b>Подписка позволяет получать расписание автоматически в указанное вами время.</b>\r\n"
             + "Например, вы можете получать недельное расписание каждую неделю в указанный вами день, либо" 
-            + "получать расписание на день в день занятия.",
+            + "получать расписание на день каждое утро перед занятиями, либо по-другому - как вам удобно.",
             replyMarkup: CustomKeyboardStorage.NoSubscriptionKeyboard
             );
     }
@@ -118,11 +126,12 @@ public class MessageSender : IMessageSender
     public async Task<Message> SendGroupSearchInProcess(Message message)
     {
         return await _bot.SendTextMessageAsync(
+            parseMode: Telegram.Bot.Types.Enums.ParseMode.Html,
             chatId: message!.Chat.Id,
-            text: "Введенной вами группы пока нет в базе данных." +
+            text: "<b>Введенной вами группы пока нет в базе данных.</b>\r\n" +
             " Если вы ввели название группы правильно, то мы добавим расписание" +
-            "в базу и отправим вам сообщение об успешном добавлении группы, после чего вы сможете пользоваться ботом " +
-            "\r\nПроцедура может занять несколько минут."
+            "в базу и отправим вам сообщение об успешном добавлении группы, после чего вы сможете пользоваться ботом.\r\n" +
+            "<i>Процедура может занять несколько минут.</i>"
             );
     }
 

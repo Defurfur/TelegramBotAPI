@@ -80,11 +80,17 @@ public static class CustomKeyboardStorage
         InlineKeyboardButton.WithCallbackData("Текущей недели", "WeekToSend: Current"),
         InlineKeyboardButton.WithCallbackData("Следующей недели", "WeekToSend: Next"),
     };
-    private static readonly List<InlineKeyboardButton> _timeOfDayButtons = new()
+    private static readonly List<List<InlineKeyboardButton>> _timeOfDayButtons = new()
     {
-        InlineKeyboardButton.WithCallbackData("Утром (до 8:00)", "TimeOfDay: Morning"),
-        InlineKeyboardButton.WithCallbackData("Днем (до 14:00)", "TimeOfDay: Afternoon"),
-        InlineKeyboardButton.WithCallbackData("Вечером (до 20:00)", "TimeOfDay: Evening"),
+        new()
+        {
+            InlineKeyboardButton.WithCallbackData("Утром (до 8:00)", "TimeOfDay: Morning"),
+            InlineKeyboardButton.WithCallbackData("Днем (до 14:00)", "TimeOfDay: Afternoon"),
+        },
+        new()
+        {
+            InlineKeyboardButton.WithCallbackData("Вечером (до 20:00)", "TimeOfDay: Evening"),
+        }
     };
     private static readonly List<InlineKeyboardButton> _includeTodayButtons = new()
     {

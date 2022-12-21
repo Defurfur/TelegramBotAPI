@@ -94,7 +94,7 @@ public class SendScheduleToSubsDailyJob : IInvocable
             .AsSplitQuery()
             .ToListAsync();
 
-        if (_users is null)
+         if (_users is null)
             return;
 
         var tasks = _users

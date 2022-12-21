@@ -36,7 +36,7 @@ public class BugCommand : ICommand<ICommandArgs, Task<Message>>
 
         await task;
 
-        return await _sender.SendMessageWithSomeText(_message, "\\*Сообщение сохранено\\!\\*");
+        return await _sender.SendMessageWithSomeText(_message, "*Сообщение сохранено\\!*");
     }
 }
 

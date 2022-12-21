@@ -58,6 +58,7 @@ builder.Services.AddTransient<TryFindGroupAndChangeUserInvocable>();
 builder.Services.AddTransient<TryFindGroupAndRegisterUserInvocable>();
 builder.Services.AddTransient<SendScheduleToSubsDailyJob>();
 builder.Services.AddTransient<SendScheduleToSubsWeeklyJob>();
+builder.Services.AddTransient<UpdateGroupsScheduleJob>();
 
 
 
@@ -67,29 +68,55 @@ app.Services.UseScheduler(scheduler =>
 {
     scheduler
     .ScheduleWithParams<SendScheduleToSubsDailyJob>(TimeOfDay.Morning)
-    .DailyAtHour(7);
+    .DailyAtHour(4);
 
     scheduler
     .ScheduleWithParams<SendScheduleToSubsDailyJob>(TimeOfDay.Afternoon)
-    .DailyAtHour(13);
+    .DailyAtHour(10);
     //.EveryTenMinutes();
 
     scheduler
     .ScheduleWithParams<SendScheduleToSubsDailyJob>(TimeOfDay.Evening)
-    .DailyAtHour(19);
+    .DailyAtHour(16);
     
     scheduler
     .ScheduleWithParams<SendScheduleToSubsWeeklyJob>(TimeOfDay.Morning)
-    .DailyAtHour(7);
+    .DailyAtHour(4);
 
     scheduler
     .ScheduleWithParams<SendScheduleToSubsWeeklyJob>(TimeOfDay.Afternoon)
-    .EveryTenMinutes();
-    //.DailyAtHour(13);
+    .DailyAtHour(10);
 
     scheduler
     .ScheduleWithParams<SendScheduleToSubsWeeklyJob>(TimeOfDay.Evening)
-    .DailyAtHour(19);
+    .DailyAtHour(16);
+
+
+    scheduler
+     .Schedule<UpdateGroupsScheduleJob>()
+     .DailyAtHour(10)
+     .PreventOverlapping("Updater");
+    scheduler
+      .Schedule<UpdateGroupsScheduleJob>()
+      .DailyAtHour(14)
+      .PreventOverlapping("Updater");
+    scheduler
+      .Schedule<UpdateGroupsScheduleJob>()
+      .DailyAtHour(18)
+      .PreventOverlapping("Updater");
+    scheduler
+      .Schedule<UpdateGroupsScheduleJob>()
+      .DailyAtHour(22)
+      .PreventOverlapping("Updater")
+      .RunOnceAtStart();
+    scheduler
+      .Schedule<UpdateGroupsScheduleJob>()
+      .DailyAtHour(2)
+      .PreventOverlapping("Updater");
+    scheduler
+      .Schedule<UpdateGroupsScheduleJob>()
+      .DailyAtHour(6)
+      .PreventOverlapping("Updater");
 
 });
 

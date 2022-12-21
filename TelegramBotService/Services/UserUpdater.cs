@@ -1,4 +1,5 @@
-﻿using ReaSchedule.DAL;
+﻿using Microsoft.EntityFrameworkCore;
+using ReaSchedule.DAL;
 using ReaSchedule.Models;
 using System;
 using System.Collections.Generic;
@@ -32,6 +33,14 @@ public class UserUpdater : IUserUpdater
         await _context.SaveChangesAsync();
 
         return user.SubscriptionSettings;
+    }
+    public async Task<string> GetUserGroupname(User user)
+    {
+        var group = await _context
+            .ReaGroups
+            .FirstAsync(x => x.Id == user.ReaGroupId);
+
+        return group.GroupName;
     }
     public async Task ProcessCallbackAndSaveChanges(SubscriptionSettings settings, string callbackData)
     {
