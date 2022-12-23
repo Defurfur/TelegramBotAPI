@@ -1,17 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ReaSchedule.DAL;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Coravel;
 using Coravel.Invocable;
 using ScheduleUpdateService.Abstractions;
 using System.Diagnostics;
 using Humanizer;
-using System.Diagnostics.Metrics;
 
 namespace ScheduledActivities.Jobs;
 

@@ -1,18 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ReaSchedule.DAL;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Coravel;
 using Coravel.Invocable;
-using ScheduleUpdateService.Abstractions;
 using System.Diagnostics;
 using Humanizer;
 using TelegramBotService.Abstractions;
-using Telegram.Bot.Types;
 using ReaSchedule.Models;
 using User = ReaSchedule.Models.User;
 
@@ -98,10 +90,10 @@ public class SendScheduleToSubsDailyJob : IInvocable
             return;
 
         var tasks = _users
-            .Select(x => FormatAndSendSchedule(
-                x,
-                (int)x.SubscriptionSettings!.DayAmountToUpdate!,
-                x.SubscriptionSettings.IncludeToday));
+            .Select(user => FormatAndSendSchedule(
+                user: user,
+                dayAmount: (int)user.SubscriptionSettings!.DayAmountToUpdate!,
+                startWithNextDay: !user.SubscriptionSettings.IncludeToday));
 
         await Task.WhenAll(tasks);
 
