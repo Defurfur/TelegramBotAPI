@@ -11,6 +11,8 @@ using System.Threading.Tasks;
 
 namespace ScheduleUpdateService.Extensions
 {
+    // review - makes sense to inject Hashing service as singleton -
+    // it creates json property resolver using some metaprogramming. No good. 
     public static class ServiceCollectionExtensions
     {
         /// <summary>

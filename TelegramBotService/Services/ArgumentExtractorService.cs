@@ -11,6 +11,7 @@ using User = ReaSchedule.Models.User;
 
 namespace TelegramBotService.Services;
 
+// review - overall complexity is overwhelming. Some refactoring needed. 
 public class ArgumentExtractorService : IArgumentExtractorService
 {
     private readonly ScheduleDbContext _context;
@@ -52,15 +53,18 @@ public class ArgumentExtractorService : IArgumentExtractorService
 
         };
 
-        args = TryGetUser(args);
 
-        args = ProcessMessageText(args);
+        TryGetUser(args);
 
-        args = ProcessCallback(args);
+        ProcessMessageText(args);
+
+        ProcessCallback(args);
 
         return args;
     }
 
+    // review - suggestion - Method with word 'Try' should return boolean value and have out param. 
+    // review - suggestion - Maybe use async overload? 
     private ICommandArgs TryGetUser(ICommandArgs args)
     {
         if (args.Update.Message is null && args.Update.CallbackQuery is null)
@@ -81,6 +85,7 @@ public class ArgumentExtractorService : IArgumentExtractorService
 
     }
 
+    // review - warning - avoid using inline local functions
     private ICommandArgs ProcessMessageText(ICommandArgs args)
     {
         bool condition = 

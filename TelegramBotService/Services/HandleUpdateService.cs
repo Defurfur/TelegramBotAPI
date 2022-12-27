@@ -8,6 +8,8 @@ using TelegramBotService.Abstractions;
 
 namespace TelegramBotService.Services;
 
+// review - warning - pack into interface and inject using one - interchangeability 
+// review - suggestion - this service members are very complex. 
 public class HandleUpdateService
 {
     private readonly ILogger<HandleUpdateService> _logger;

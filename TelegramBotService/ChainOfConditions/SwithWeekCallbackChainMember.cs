@@ -10,6 +10,7 @@ using TelegramBotService.Models;
 
 namespace TelegramBotService.ChainOfConditions;
 
+// review - error - typo
 public class SwithWeekCallbackChainMember : AbstractMessageChainMember
 {
     public override ICommand<ICommandArgs, Task<Message>>? Handle(ICommandArgs args)
