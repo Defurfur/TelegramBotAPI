@@ -2,7 +2,7 @@
 using System.Reflection;
 using Telegram.Bot.Types;
 
-namespace TelegramBotService;
+namespace TelegramBotAPI;
 
 public class NewtonsoftJsonUpdate : Update
 {

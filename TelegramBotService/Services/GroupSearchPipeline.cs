@@ -22,22 +22,12 @@ public record MessageAndUser
 public class GroupSearchPipeline : IGroupSearchPipeline
 {
     private readonly IQueue _queue;
-    private readonly IBrowserWrapper _browserWrapper;
-    private readonly ScheduleDbContext _context;
-    private Message? _message;
     private readonly IContextUpdateService _contextUpdateService;
-    private readonly IParserPipeline _parserPipeline;
 
     public GroupSearchPipeline(
-        ScheduleDbContext context,
-        IBrowserWrapper browserWrapper,
-        IParserPipeline parserPipeline,
         IQueue queue,
         IContextUpdateService contextUpdateService)
     {
-        _context = context;
-        _browserWrapper = browserWrapper;
-        _parserPipeline = parserPipeline;
         _queue = queue;
         _contextUpdateService = contextUpdateService;
     }
@@ -48,7 +38,7 @@ public class GroupSearchPipeline : IGroupSearchPipeline
     /// <param name="message"></param>
     /// <exception cref="ArgumentNullException"><paramref name="message"/>is null.</exception>
     /// <exception cref="ArgumentException"><paramref name="message.Text"/>is empty.</exception>
-    public async Task<GroupSearchState> ExecuteAsync(Message message)
+    public async Task<GroupSearchState> RegisterUserAsync(Message message)
     {
         
         ArgumentNullException.ThrowIfNull(message, nameof(message));
@@ -58,11 +48,16 @@ public class GroupSearchPipeline : IGroupSearchPipeline
 
         if(_contextUpdateService.TryFindGroupInDb(message.Text, out var group))
         {
-            await _contextUpdateService.TryRegisterUserAsync(group!, message.Chat.Id);
-            return GroupSearchState.FoundInDatabase;
+            var success = await _contextUpdateService.TryRegisterUserAsync(group!, message.Chat.Id);
+
+            var result = success
+                ? GroupSearchState.FoundInDatabase
+                : GroupSearchState.Error;
+
+            return result;
         }
 
-        _queue.QueueInvocableWithPayload<TryFindGroupAndRegisterUserInvocable, Message>(message);
+        _queue.QueueInvocableWithPayload<TryFindGroupAndRegisterUser, Message>(message);
 
         return GroupSearchState.InProcess;
     }
@@ -76,7 +71,7 @@ public class GroupSearchPipeline : IGroupSearchPipeline
     /// <exception cref="ArgumentNullException"><paramref name="message"/>is null.</exception>
     /// <exception cref="ArgumentNullException"><paramref name="user"/>is null.</exception>
     /// <exception cref="ArgumentException"><paramref name="message.Text"/>is empty.</exception>
-    public async Task<GroupSearchState> ExecuteAsync(Message message, User user)
+    public async Task<GroupSearchState> ChangeUserGroupAsync(Message message, User user)
     {
         ArgumentNullException.ThrowIfNull(message, nameof(message));
         ArgumentNullException.ThrowIfNull(user, nameof(user));
@@ -93,7 +88,7 @@ public class GroupSearchPipeline : IGroupSearchPipeline
         var MessageAndUser = new MessageAndUser { Message = message, User = user };
 
 
-        _queue.QueueInvocableWithPayload<TryFindGroupAndChangeUserInvocable, MessageAndUser>(MessageAndUser);
+        _queue.QueueInvocableWithPayload<TryFindGroupAndChangeUser, MessageAndUser>(MessageAndUser);
 
         return GroupSearchState.InProcess;
     }

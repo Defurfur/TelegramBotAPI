@@ -35,7 +35,16 @@ public class MessageSender : IMessageSender
             text: "<b>Группа найдена! Теперь вы можете пользоваться ботом!</b>",
             replyMarkup: CustomKeyboardStorage.DefaultReplyKeyboard
             );
-    } 
+    }
+    public async Task<Message> SendDefaultKeyboard(Message message)
+    {
+        return await _bot.SendTextMessageAsync(
+            parseMode: Telegram.Bot.Types.Enums.ParseMode.Html,
+            chatId: message!.Chat.Id,
+            text: "Вы уже зарегестрированы!",
+            replyMarkup: CustomKeyboardStorage.DefaultReplyKeyboard
+            );
+    }
     public async Task<Message> InvalidGroupInputMessage(Message message)
     {
         return await _bot.SendTextMessageAsync(
@@ -61,7 +70,7 @@ public class MessageSender : IMessageSender
         return await _bot.SendTextMessageAsync(
             parseMode: Telegram.Bot.Types.Enums.ParseMode.Html,
             chatId: message!.Chat.Id,
-            text: $"<b>Ваша такущая группа: {groupName}</b>\r\n\r\n" + 
+            text: $"<b>Ваша текущая группа: {groupName}</b>\r\n\r\n" + 
             "Чтобы поменять группу, введите: \r\n /change номер группы" +
             "\r\n<i>Например:\r\n /change 15.02д-мм2/19б</i>"
             ); 

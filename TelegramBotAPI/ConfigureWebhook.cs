@@ -1,7 +1,7 @@
 ﻿using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 
-namespace TelegramBotService;
+namespace TelegramBotAPI;
 public class ConfigureWebhook : IHostedService
 {
     private readonly ILogger<ConfigureWebhook> _logger;
@@ -38,7 +38,6 @@ public class ConfigureWebhook : IHostedService
         using var scope = _services.CreateScope();
         var botClient = scope.ServiceProvider.GetRequiredService<ITelegramBotClient>();
 
-        // Remove webhook upon app shutdown
         _logger.LogInformation("Removing webhook");
         await botClient.DeleteWebhookAsync(cancellationToken: cancellationToken);
     }

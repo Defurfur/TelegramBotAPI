@@ -14,18 +14,6 @@ public class ScheduleFormatter : IScheduleFormatter
     private StringBuilder? _sb;
     private StringBuilder Sb { get => _sb ??= new(1000, 4096); }
 
-    private readonly Dictionary<string, string> _ordinalNumberAndEmojiDict = new()
-    {
-        {"1 пара", "\u0031\u20E3" },
-        {"2 пара", "\u0032\u20E3" },
-        {"3 пара", "\u0033\u20E3" },
-        {"4 пара", "\u0034\u20E3" },
-        {"5 пара", "\u0035\u20E3" },
-        {"6 пара", "\u0036\u20E3" },
-        {"7 пара", "\u0037\u20E3" },
-        {"8 пара", "\u0038\u20E3" },
-    };
-
     public string Format(ReaGroup reaGroup)
     {
         FormatReaGroup(reaGroup);
@@ -97,7 +85,9 @@ public class ScheduleFormatter : IScheduleFormatter
         void ProcessSingleClass(ReaClass reaClass)
         {
             Sb.Append("\r\n" +
-                _ordinalNumberAndEmojiDict.GetValue(reaClass.OrdinalNumber, false) + " ");
+                DictionaryStorage
+                .OrdinalNumberAndEmojiDict
+                .GetValue(reaClass.OrdinalNumber, false) + "\r\n");
 
             Sb.Append($"*{reaClass.ClassName}*\r\n");
             Sb.Append($"_{reaClass.ClassType}_\r\n");

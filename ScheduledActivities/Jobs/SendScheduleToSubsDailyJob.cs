@@ -7,34 +7,36 @@ using Humanizer;
 using TelegramBotService.Abstractions;
 using ReaSchedule.Models;
 using User = ReaSchedule.Models.User;
+using XAct;
+using ScheduleUpdateService.Extensions;
 
 namespace ScheduledActivities.Jobs;
 
 public class SendScheduleToSubsDailyJob : IInvocable
 {
+    private List<User>? _users;
     private readonly ScheduleDbContext _context;
     private readonly IScheduleLoader _loader;
     private readonly IMessageSender _sender;
     private readonly ILogger<SendScheduleToSubsDailyJob> _logger;
-    private readonly TimeOfDay _timeOfDay;
-    private List<User>? _users;
+    private TimeOfDay _timeOfDay;
     public SendScheduleToSubsDailyJob(
         ScheduleDbContext context,
         ILogger<SendScheduleToSubsDailyJob> logger,
         IScheduleLoader loader,
-        IMessageSender sender,
-        TimeOfDay timeOfDay)
+        IMessageSender sender)
     {
         _context = context;
         _logger = logger;
         _loader = loader;
         _sender = sender;
-        _timeOfDay = timeOfDay;
     }
 
 
     public async Task Invoke()
     {
+        _timeOfDay = TimeOfDayMethods.GetTimeOfDay(4, 10, 16);
+
         _logger.LogInformation("{Task} with param 'timeofDay' = '{timeOfDay}' has started",
             GetType().Name,
             _timeOfDay.Humanize());
@@ -72,6 +74,9 @@ public class SendScheduleToSubsDailyJob : IInvocable
 
     private async Task Process()
     {
+        if (_timeOfDay == TimeOfDay.NotSet)
+            return;
+
         _users = await _context
             .Users
             .Include(x => x.SubscriptionSettings)
@@ -109,4 +114,6 @@ public class SendScheduleToSubsDailyJob : IInvocable
         await _sender.SendMessageWithSomeText(user.ChatId, formattedText);
 
     }
+
+   
 }

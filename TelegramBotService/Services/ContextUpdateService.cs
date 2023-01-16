@@ -33,14 +33,14 @@ namespace TelegramBotService.Services
             return reaGroup != null;
         }
 
-        public async Task TryRegisterUserAsync(ReaGroup group, long chatId)
+        public async Task<bool> TryRegisterUserAsync(ReaGroup group, long chatId)
         {
             var userExists = await _context
                 .Users
                 .AnyAsync(x => x.ReaGroupId == group.Id);
 
             if (userExists)
-                return;
+                return false;
 
             var newUser = new ReaSchedule.Models.User()
             {
@@ -50,6 +50,12 @@ namespace TelegramBotService.Services
 
             await _context.Users.AddAsync(newUser);
             await _context.SaveChangesAsync();
+
+            userExists =  await _context
+                .Users
+                .AnyAsync(x => x.ReaGroupId == group.Id);
+
+            return userExists;
         }
         public async Task TryRegisterUserAsync(string groupName, long chatId)
         {

@@ -20,24 +20,24 @@ namespace ScheduledActivities.Jobs;
 
 public class SendScheduleToSubsWeeklyJob : IInvocable
 {
+    private readonly TimeOfDay _timeOfDay;
     private readonly ScheduleDbContext _context;
     private readonly IScheduleLoader _loader;
     private readonly IMessageSender _sender;
     private readonly ILogger<SendScheduleToSubsWeeklyJob> _logger;
-    private readonly TimeOfDay _timeOfDay;
     private List<User>? _users;
     public SendScheduleToSubsWeeklyJob(
+        TimeOfDay timeOfDay,
         ScheduleDbContext context,
         ILogger<SendScheduleToSubsWeeklyJob> logger,
         IScheduleLoader loader,
-        IMessageSender sender,
-        TimeOfDay timeOfDay)
+        IMessageSender sender)
     {
+        _timeOfDay = timeOfDay;
         _context = context;
         _logger = logger;
         _loader = loader;
         _sender = sender;
-        _timeOfDay = timeOfDay;
     }
 
 

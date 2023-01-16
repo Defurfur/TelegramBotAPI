@@ -15,6 +15,7 @@ public static class ChainStorage
         new ProcessCallbackChainMember(),
         new TryChangeGroupChainMember(),
         new ChangeSubscriptionSettingsChainMember(),
+        new StartWithUserExistsChainMember(),
         new StartMessageChainMember(),
         new BugChainMember(),
         new GroupInputFalseChainMember(),

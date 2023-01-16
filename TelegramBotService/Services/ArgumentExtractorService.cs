@@ -123,6 +123,7 @@ public class ArgumentExtractorService : IArgumentExtractorService
 
             args = TryGetKeyboardCommand(args);
             args = TryGetChangeGroupCommand(args);
+            args = TryGetStartWithUserCommand(args);
 
             return args;
 
@@ -177,6 +178,17 @@ public class ArgumentExtractorService : IArgumentExtractorService
                 return args;
 
 
+            }
+            ICommandArgs TryGetStartWithUserCommand(ICommandArgs args)
+            {
+                var condition = args.Update.Message!.Text == "/start";
+
+                if (!condition)
+                    return args;
+
+                args.OperationType = OperationType.StartCommand;
+
+                return args;
             }
         }
 

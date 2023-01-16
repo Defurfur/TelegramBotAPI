@@ -2,66 +2,87 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ReaSchedule.DAL;
 
 #nullable disable
 
-namespace ReaSchedule.DAL.Migrations
+namespace ReaSchedule.DAL.Migrations.New
 {
     [DbContext(typeof(ScheduleDbContext))]
-    [Migration("20221111174321_AddedUserModelMigration")]
-    partial class AddedUserModelMigration
+    partial class NewContextModelSnapshot : ModelSnapshot
     {
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "6.0.8")
-                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+                .HasAnnotation("ProductVersion", "7.0.2")
+                .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
-            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("ReaSchedule.Models.Bug", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<long>("ChatId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Bugs");
+                });
 
             modelBuilder.Entity("ReaSchedule.Models.ReaClass", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Audition")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ClassElementId")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ClassName")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ClassType")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("OrdinalNumber")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Professor")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("ScheduleDayId")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<string>("Subgroup")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -74,17 +95,17 @@ namespace ReaSchedule.DAL.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("GroupName")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Hash")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -95,22 +116,22 @@ namespace ReaSchedule.DAL.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateOnly>("Date")
+                    b.Property<DateTime>("Date")
                         .HasColumnType("date");
 
                     b.Property<int>("DayOfWeek")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<string>("DayOfWeekName")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("ScheduleWeekId")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -123,17 +144,17 @@ namespace ReaSchedule.DAL.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("ReaGroupId")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
-                    b.Property<DateOnly>("WeekEnd")
+                    b.Property<DateTime>("WeekEnd")
                         .HasColumnType("date");
 
-                    b.Property<DateOnly>("WeekStart")
+                    b.Property<DateTime>("WeekStart")
                         .HasColumnType("date");
 
                     b.HasKey("Id");
@@ -143,23 +164,61 @@ namespace ReaSchedule.DAL.Migrations
                     b.ToTable("ScheduleWeeks");
                 });
 
+            modelBuilder.Entity("ReaSchedule.Models.SubscriptionSettings", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DayAmountToUpdate")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("DayOfUpdate")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IncludeToday")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("SubscriptionEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("TimeOfDay")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UpdateSchedule")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("WeekToSend")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("Settings");
+                });
+
             modelBuilder.Entity("ReaSchedule.Models.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<long>("ChatId")
                         .HasColumnType("bigint");
 
                     b.Property<int>("ReaGroupId")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ReaGroupId");
 
                     b.ToTable("Users");
                 });
@@ -193,15 +252,13 @@ namespace ReaSchedule.DAL.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("ReaSchedule.Models.User", b =>
+            modelBuilder.Entity("ReaSchedule.Models.SubscriptionSettings", b =>
                 {
-                    b.HasOne("ReaSchedule.Models.ReaGroup", "ReaGroup")
-                        .WithMany()
-                        .HasForeignKey("ReaGroupId")
+                    b.HasOne("ReaSchedule.Models.User", null)
+                        .WithOne("SubscriptionSettings")
+                        .HasForeignKey("ReaSchedule.Models.SubscriptionSettings", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("ReaGroup");
                 });
 
             modelBuilder.Entity("ReaSchedule.Models.ReaGroup", b =>
@@ -217,6 +274,11 @@ namespace ReaSchedule.DAL.Migrations
             modelBuilder.Entity("ReaSchedule.Models.ScheduleWeek", b =>
                 {
                     b.Navigation("ScheduleDays");
+                });
+
+            modelBuilder.Entity("ReaSchedule.Models.User", b =>
+                {
+                    b.Navigation("SubscriptionSettings");
                 });
 #pragma warning restore 612, 618
         }

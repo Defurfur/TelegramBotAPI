@@ -10,6 +10,7 @@ namespace TelegramBotService.Models
     {
         FoundInDatabase,
         InProcess,
+        Error
     }
     public enum OperationType
     {

@@ -16,27 +16,27 @@ namespace TelegramBotService.BackgroundTasks;
 
 
 /// <summary>
-/// Class that that implements <see cref="IInvocable"/> and <see cref="IInvocableWithPayload{T}"/> interfaces. 
-/// It's used to process group input and search for a group schedule on a website as a queued background task.
+/// Class that that implements <see cref="IInvocable"/> and <see cref="IInvocableWithPayload{T}"/> interfaces. <br/>
+/// It's used to process group input and search for a group schedule on a website as a queued background task.<br/><br/>
 /// Its only method <see cref="Invoke()"/> seeks for a group and if it's present - adds it to a database, creates new
 /// <see cref="User"/> and sends success message to a bt user. If it doesn't find any group - sends fail message.
 /// </summary>
 
-public class TryFindGroupAndRegisterUserInvocable : IInvocable, IInvocableWithPayload<Message>
+public class TryFindGroupAndRegisterUser : IInvocable, IInvocableWithPayload<Message>
 {
-    private readonly ILogger<TryFindGroupAndRegisterUserInvocable> _logger;
+    private readonly ILogger<TryFindGroupAndRegisterUser> _logger;
     private readonly IParserPipeline _parserPipeline;
     private readonly IMessageSender _sender;
     private readonly IContextUpdateService _contextUpdateService;
     private readonly IScheduleParser _scheduleParser;
     public Message Payload { get; set; }
 
-    public TryFindGroupAndRegisterUserInvocable(
+    public TryFindGroupAndRegisterUser(
         IParserPipeline parserPipeline,
         IMessageSender sender,
         IScheduleParser scheduleParser,
         IContextUpdateService contextUpdateService,
-        ILogger<TryFindGroupAndRegisterUserInvocable> logger)
+        ILogger<TryFindGroupAndRegisterUser> logger)
     {
         _parserPipeline = parserPipeline;
         _sender = sender;
@@ -115,10 +115,6 @@ public class TryFindGroupAndRegisterUserInvocable : IInvocable, IInvocableWithPa
                 groupExists,
                 stopwatch.Elapsed.Humanize(2));
         }
-       
-
-        // refactor _parserPipeline as a parameter
-        
 
     }
 

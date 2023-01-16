@@ -12,33 +12,29 @@ using TelegramBotService.Services;
 using Message = Telegram.Bot.Types.Message;
 
 namespace TelegramBotService.BackgroundTasks;
-
-
-
-
 /// <summary>
-/// Class that that implements <see cref="IInvocable"/> and <see cref="IInvocableWithPayload{T}"/> interfaces. 
-/// It's used to process group input and search for a group schedule on a website as a queued background task.
+/// Class that that implements <see cref="IInvocable"/> and <see cref="IInvocableWithPayload{T}"/> interfaces. <br/>
+/// It's used to process group input and search for a group schedule on a website as a queued background task. <br/><br/>
 /// Its only method <see cref="Invoke()"/> seeks for a group and if it's present - adds it to a database, 
 /// changes <see cref="User"/> model and sends success message to a bot user. 
 /// If it doesn't find any group - sends fail message.
 /// </summary>
 
-public class TryFindGroupAndChangeUserInvocable : IInvocable, IInvocableWithPayload<MessageAndUser>
+public class TryFindGroupAndChangeUser : IInvocable, IInvocableWithPayload<MessageAndUser>
 {
-    private readonly ILogger<TryFindGroupAndChangeUserInvocable> _logger;
+    private readonly ILogger<TryFindGroupAndChangeUser> _logger;
     private readonly IParserPipeline _parserPipeline;
     private readonly IMessageSender _sender;
     private readonly IScheduleParser _scheduleParser;
     private readonly IContextUpdateService _contextUpdateService;
     public MessageAndUser Payload { get; set; }
 
-    public TryFindGroupAndChangeUserInvocable(
+    public TryFindGroupAndChangeUser(
         IParserPipeline parserPipeline,
         IMessageSender sender,
         IScheduleParser scheduleParser,
         IContextUpdateService contextUpdateService,
-        ILogger<TryFindGroupAndChangeUserInvocable> logger)
+        ILogger<TryFindGroupAndChangeUser> logger)
     {
         _parserPipeline = parserPipeline;
         _sender = sender;
@@ -68,9 +64,11 @@ public class TryFindGroupAndChangeUserInvocable : IInvocable, IInvocableWithPayl
         ArgumentNullException.ThrowIfNull(Payload.Message, nameof(Payload.Message));
         ArgumentNullException.ThrowIfNull(Payload.User, nameof(Payload.User));
         ArgumentException.ThrowIfNullOrEmpty(groupAsString, nameof(groupAsString));
+
         try
         {
-            groupExists = await _scheduleParser.CheckForGroupExistance(groupAsString);
+            groupExists = await _scheduleParser
+                .CheckForGroupExistance(groupAsString);
 
             if (!groupExists)
             {
@@ -78,9 +76,11 @@ public class TryFindGroupAndChangeUserInvocable : IInvocable, IInvocableWithPayl
                 return;
             }
 
-            var group = await _contextUpdateService.CreateNewReaGroup(groupAsString);
+            var group = await _contextUpdateService
+                .CreateNewReaGroup(groupAsString);
 
-            var updatedGroup = await _parserPipeline.ParseAndUpdate(group);
+            var updatedGroup = await _parserPipeline
+                .ParseAndUpdate(group);
 
             if(updatedGroup.ScheduleWeeks is null)
             {

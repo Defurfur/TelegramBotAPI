@@ -2,15 +2,18 @@
 
 #nullable disable
 
-namespace ReaSchedule.DAL.Migrations
+namespace ReaSchedule.DAL.Migrations.New
 {
-    public partial class AddedBugModel : Migration
+    /// <inheritdoc />
+    public partial class MigrSQLEXpressForProd : Migration
     {
+        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
 
         }
 
+        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
 
