@@ -18,34 +18,34 @@ using User = ReaSchedule.Models.User;
 
 namespace ScheduledActivities.Jobs;
 
-public class SendScheduleToSubsWeeklyJob : IInvocable
+public abstract class AbstractWeeklyScheduleJob : IInvocable
 {
-    private readonly ScheduleDbContext _context;
-    private readonly IScheduleLoader _loader;
-    private readonly IMessageSender _sender;
-    private readonly ILogger<SendScheduleToSubsWeeklyJob> _logger;
-    private readonly TimeOfDay _timeOfDay;
-    private List<User>? _users;
-    public SendScheduleToSubsWeeklyJob(
-        ScheduleDbContext context,
-        ILogger<SendScheduleToSubsWeeklyJob> logger,
-        IScheduleLoader loader,
-        IMessageSender sender,
-        TimeOfDay timeOfDay)
-    {
-        _context = context;
-        _logger = logger;
-        _loader = loader;
-        _sender = sender;
-        _timeOfDay = timeOfDay;
-    }
+    protected abstract ScheduleDbContext Context { get; set; }
+    protected abstract IScheduleLoader Loader { get; set; }
+    protected abstract IMessageSender Sender { get; set; }
+    protected abstract ILogger<AbstractWeeklyScheduleJob> Logger { get; set; }
+    protected abstract TimeOfDay TimeOfDay { get; set; }
+    protected abstract List<User>? Users { get; set; }
+    //public AbstractWeeklyScheduleJob(
+    //    ScheduleDbContext context,
+    //    ILogger<AbstractWeeklyScheduleJob> logger,
+    //    IScheduleLoader loader,
+    //    IMessageSender sender,
+    //    TimeOfDay timeOfDay)
+    //{
+    //    _context = context;
+    //    _logger = logger;
+    //    _loader = loader;
+    //    _sender = sender;
+    //    _timeOfDay = timeOfDay;
+    //}
 
 
     public async Task Invoke()
     {
-        _logger.LogInformation("{Task} with param 'timeofDay' = '{timeOfDay}' has started",
+        Logger.LogInformation("{Task} with param 'timeofDay' = '{timeOfDay}' has started",
             GetType().Name,
-            _timeOfDay.Humanize());
+            TimeOfDay.Humanize());
 
         var stopwatch = Stopwatch.StartNew();
 
@@ -55,22 +55,22 @@ public class SendScheduleToSubsWeeklyJob : IInvocable
         }
         catch(Exception ex)
         {
-            _logger.LogInformation(ex, "{exception} was thrown", ex.GetType().Name);
+            Logger.LogInformation(ex, "{exception} was thrown", ex.GetType().Name);
         }
         finally
         {
             stopwatch.Stop();
-            var userAmount = _users is null 
+            var userAmount = Users is null 
                 ? 0 
-                : _users.Count;
+                : Users.Count;
 
-            _users = null;
+            Users = null;
 
-            _logger.LogInformation("[Metrics] {Task} with params " +
+            Logger.LogInformation("[Metrics] {Task} with params " +
                 "'timeofDay' = '{timeOfDay}'  took {Time} to finish. {UserAmount} " +
                 "users have recieved schedule",
             GetType().Name,
-            _timeOfDay.Humanize(),
+            TimeOfDay.Humanize(),
             stopwatch.Elapsed.Humanize(2),
             userAmount);
 
@@ -78,9 +78,9 @@ public class SendScheduleToSubsWeeklyJob : IInvocable
               
     }
 
-    private async Task Process()
+    private protected async Task Process()
     {
-        _users = await _context
+        Users = await Context
             .Users
             .Include(x => x.SubscriptionSettings)
             .Where(x =>
@@ -94,10 +94,10 @@ public class SendScheduleToSubsWeeklyJob : IInvocable
             .AsSplitQuery()
             .ToListAsync();
 
-        if (_users is null)
+        if (Users is null)
             return;
 
-        var tasks = _users
+        var tasks = Users
             .Select(x => FormatAndSendSchedule(
                 x,
                 x.SubscriptionSettings!.WeekToSend));
@@ -106,7 +106,7 @@ public class SendScheduleToSubsWeeklyJob : IInvocable
 
     }
 
-    private async Task FormatAndSendSchedule(
+    private protected async Task FormatAndSendSchedule(
         ReaSchedule.Models.User user,
         WeekToSend weekToSend)
     {
@@ -117,9 +117,9 @@ public class SendScheduleToSubsWeeklyJob : IInvocable
             ? 0
             : 1;
 
-        var formattedText = await _loader.DownloadFormattedScheduleAsync(user, weekIndex);
+        var formattedText = await Loader.DownloadFormattedScheduleAsync(user, weekIndex);
 
-        await _sender.SendMessageWithSomeText(user.ChatId, formattedText);
+        await Sender.SendMessageWithSomeText(user.ChatId, formattedText);
 
     }
 }

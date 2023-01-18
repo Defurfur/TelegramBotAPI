@@ -10,34 +10,34 @@ using User = ReaSchedule.Models.User;
 
 namespace ScheduledActivities.Jobs;
 
-public class SendScheduleToSubsDailyJob : IInvocable
+public abstract class AbstractDailyScheduleJob : IInvocable
 {
-    private readonly ScheduleDbContext _context;
-    private readonly IScheduleLoader _loader;
-    private readonly IMessageSender _sender;
-    private readonly ILogger<SendScheduleToSubsDailyJob> _logger;
-    private readonly TimeOfDay _timeOfDay;
-    private List<User>? _users;
-    public SendScheduleToSubsDailyJob(
-        ScheduleDbContext context,
-        ILogger<SendScheduleToSubsDailyJob> logger,
-        IScheduleLoader loader,
-        IMessageSender sender,
-        TimeOfDay timeOfDay)
-    {
-        _context = context;
-        _logger = logger;
-        _loader = loader;
-        _sender = sender;
-        _timeOfDay = timeOfDay;
-    }
-
+    protected abstract ScheduleDbContext Context { get; set; }
+    protected abstract IScheduleLoader Loader { get; set; }
+    protected abstract IMessageSender Sender { get; set; }
+    protected abstract ILogger<AbstractDailyScheduleJob> Logger { get; set; }
+    protected abstract TimeOfDay TimeOfDay { get; set; }
+    protected abstract List<User>? Users { get; set; }
+    //public AbstractDailyScheduleJob(
+    //    ScheduleDbContext context,
+    //    ILogger<AbstractDailyScheduleJob> logger,
+    //    IScheduleLoader loader,
+    //    IMessageSender sender)
+    //{
+    //    Context = context;
+    //    Logger = logger;
+    //    Loader = loader;
+    //    Sender = sender;
+    //}
 
     public async Task Invoke()
     {
-        _logger.LogInformation("{Task} with param 'timeofDay' = '{timeOfDay}' has started",
+        if (TimeOfDay == TimeOfDay.NotSet)
+            throw new Exception("Task not configured");
+
+        Logger.LogInformation("{Task} with param 'timeofDay' = '{timeOfDay}' has started",
             GetType().Name,
-            _timeOfDay.Humanize());
+            TimeOfDay.Humanize());
 
         var stopwatch = Stopwatch.StartNew();
 
@@ -47,22 +47,22 @@ public class SendScheduleToSubsDailyJob : IInvocable
         }
         catch(Exception ex)
         {
-            _logger.LogInformation(ex, "{exception} was thrown", ex.GetType().Name);
+            Logger.LogInformation(ex, "{exception} was thrown", ex.GetType().Name);
         }
         finally
         {
             stopwatch.Stop();
-            var userAmount = _users is null 
+            var userAmount = Users is null 
                 ? 0 
-                : _users.Count;
+                : Users.Count;
 
-            _users = null;
+            Users = null;
 
-            _logger.LogInformation("[Metrics] {Task} with param " +
+            Logger.LogInformation("[Metrics] {Task} with param " +
                 "'timeofDay' = '{timeOfDay}' took {Time} to finish. {UserAmount} " +
                 "users have recieved schedule",
             GetType().Name,
-            _timeOfDay.Humanize(),
+            TimeOfDay.Humanize(),
             stopwatch.Elapsed.Humanize(2),
             userAmount);
 
@@ -70,9 +70,9 @@ public class SendScheduleToSubsDailyJob : IInvocable
               
     }
 
-    private async Task Process()
+    private protected async Task Process()
     {
-        _users = await _context
+        Users = await Context
             .Users
             .Include(x => x.SubscriptionSettings)
             .Where(x =>
@@ -82,14 +82,14 @@ public class SendScheduleToSubsDailyJob : IInvocable
                 && x.SubscriptionSettings.DayAmountToUpdate != DayAmountToUpdate.NotSet
                 && x.SubscriptionSettings.DayOfUpdate == null
                 && x.SubscriptionSettings.WeekToSend == WeekToSend.NotSet
-                && x.SubscriptionSettings.TimeOfDay == _timeOfDay)
+                && x.SubscriptionSettings.TimeOfDay == TimeOfDay)
             .AsSplitQuery()
             .ToListAsync();
 
-         if (_users is null)
+         if (Users is null)
             return;
 
-        var tasks = _users
+        var tasks = Users
             .Select(user => FormatAndSendSchedule(
                 user: user,
                 dayAmount: (int)user.SubscriptionSettings!.DayAmountToUpdate!,
@@ -99,14 +99,15 @@ public class SendScheduleToSubsDailyJob : IInvocable
 
     }
 
-    private async Task FormatAndSendSchedule(
+    private protected async Task FormatAndSendSchedule(
         ReaSchedule.Models.User user,
         int dayAmount,
         bool startWithNextDay)
     {
-        var formattedText = await _loader.DownloadFormattedScheduleNDaysAsync(user, dayAmount, startWithNextDay);
+        var formattedText = await Loader.DownloadFormattedScheduleNDaysAsync(user, dayAmount, startWithNextDay);
 
-        await _sender.SendMessageWithSomeText(user.ChatId, formattedText);
+        await Sender.SendMessageWithSomeText(user.ChatId, formattedText);
 
     }
+
 }
