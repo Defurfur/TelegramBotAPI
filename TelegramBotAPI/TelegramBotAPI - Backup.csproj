@@ -4,17 +4,10 @@
     <TargetFramework>net7.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>d5f29818-7184-4e8a-a034-1ea915a7fbdb</UserSecretsId>
   </PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)'=='Release'">
-		<UserSecretsId>c952ecfc-344e-43e1-bb67-1ac05973d6c6</UserSecretsId>
-	</PropertyGroup>
-	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
-		<UserSecretsId>7D104000-2230-4EDE-8AE6-63BDDA0BD0C5</UserSecretsId>
-	</PropertyGroup>
-
-
-<Target Name="UpdateWebConfigBeforeBuild" BeforeTargets="Build">
+	
+ <Target Name="UpdateWebConfigBeforeBuild" BeforeTargets="Build">
 	 <Message Text="Configuration: $(Configuration): web.dev.$(Configuration).config" />
     <TransformXml Source="web.config" Transform="web.$(Configuration).config" Destination="web.config" />
 </Target>
@@ -63,7 +56,6 @@
   <PrivateAssets>all</PrivateAssets>
   <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 </PackageReference>
-<PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="7.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
     <PackageReference Include="Telegram.Bot" Version="18.0.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">

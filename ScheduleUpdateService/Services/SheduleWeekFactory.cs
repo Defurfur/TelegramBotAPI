@@ -26,8 +26,14 @@ namespace ScheduleUpdateService.Services
 
             if (sortedClassInfoArray is null || !sortedClassInfoArray.Any())
             {
+                var now = DateTime.Now;
+
+                int year = 9 <= now.Month && now.Month <= 12 
+                    ? now.Year 
+                    : now.Year - 1;
+
                 scheduleDay.Date = DateTimeExtension
-                    .GetMondayByWeekNumber(weekNumber)
+                    .GetMondayByWeekNumber(weekNumber, year)
                     .GetDateByDayOfWeek(scheduleDay.DayOfWeekName);
             }
             else

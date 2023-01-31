@@ -6,7 +6,7 @@ public class SubscriptionSettings: IIdentifyable<int>
     public int UserId { get; set; }
     public bool SubscriptionEnabled { get; set; }
     public UpdateSchedule UpdateSchedule { get; set; } = UpdateSchedule.NotSet;
-    public DayOfWeekEx? DayOfUpdate { get; set; } = null;
+    public DayOfWeekEx DayOfUpdate { get; set; } = DayOfWeekEx.NotSet;
     public DayAmountToUpdate DayAmountToUpdate { get; set; } = DayAmountToUpdate.NotSet;
     public TimeOfDay TimeOfDay { get; set; } = TimeOfDay.NotSet;
     public WeekToSend WeekToSend { get; set; } = WeekToSend.NotSet;
@@ -15,7 +15,7 @@ public class SubscriptionSettings: IIdentifyable<int>
     {
         get =>
         UpdateSchedule == UpdateSchedule.EveryDay
-        && DayOfUpdate == null
+        && DayOfUpdate == DayOfWeekEx.NotSet
         && DayAmountToUpdate != DayAmountToUpdate.NotSet
         && TimeOfDay != TimeOfDay.NotSet    
         && WeekToSend == WeekToSend.NotSet;
@@ -24,19 +24,17 @@ public class SubscriptionSettings: IIdentifyable<int>
     {
         get =>
         UpdateSchedule == UpdateSchedule.EveryWeek
-        && DayOfUpdate != null
+        && DayOfUpdate != DayOfWeekEx.NotSet
         && DayAmountToUpdate == DayAmountToUpdate.NotSet
         && TimeOfDay != TimeOfDay.NotSet    
         && WeekToSend != WeekToSend.NotSet;
     }
 
-
-
     public void Reset()
     {
         SubscriptionEnabled = false;
         UpdateSchedule= UpdateSchedule.NotSet;
-        DayOfUpdate = null;
+        DayOfUpdate = DayOfWeekEx.NotSet;
         WeekToSend= WeekToSend.NotSet;
         DayAmountToUpdate = DayAmountToUpdate.NotSet;
         TimeOfDay = TimeOfDay.NotSet;

@@ -35,7 +35,7 @@ public abstract class AbstractDailyScheduleJob : IInvocable
         if (TimeOfDay == TimeOfDay.NotSet)
             throw new Exception("Task not configured");
 
-        Logger.LogInformation("{Task} with param 'timeofDay' = '{timeOfDay}' has started",
+        Logger.LogDebug("{Task} with param 'timeofDay' = '{timeOfDay}' has started",
             GetType().Name,
             TimeOfDay.Humanize());
 
@@ -47,24 +47,25 @@ public abstract class AbstractDailyScheduleJob : IInvocable
         }
         catch(Exception ex)
         {
-            Logger.LogInformation(ex, "{exception} was thrown", ex.GetType().Name);
+            Logger.LogError(ex, "{exception} was thrown", ex.GetType().Name);
         }
         finally
         {
             stopwatch.Stop();
-            var userAmount = Users is null 
-                ? 0 
-                : Users.Count;
+
+            var loggingString = Users is null
+                ? "No users, whos settings satisfy task conditions have been found"
+                : $"{Users.Count} users have recieved schedule";
 
             Users = null;
 
-            Logger.LogInformation("[Metrics] {Task} with param " +
-                "'timeofDay' = '{timeOfDay}' took {Time} to finish. {UserAmount} " +
-                "users have recieved schedule",
-            GetType().Name,
-            TimeOfDay.Humanize(),
-            stopwatch.Elapsed.Humanize(2),
-            userAmount);
+            Logger.LogInformation(
+                "[Metrics] {Task} with params " +
+                "'timeofDay' = '{timeOfDay}'  took {elapsedTime} to finish. {UserAmuntString}",
+                GetType().Name,
+                TimeOfDay.Humanize(),
+                stopwatch.Elapsed.Humanize(2),
+                loggingString);
 
         }
               
@@ -72,6 +73,7 @@ public abstract class AbstractDailyScheduleJob : IInvocable
 
     private protected async Task Process()
     {
+
         Users = await Context
             .Users
             .Include(x => x.SubscriptionSettings)
@@ -80,7 +82,7 @@ public abstract class AbstractDailyScheduleJob : IInvocable
                 && x.SubscriptionSettings.SubscriptionEnabled == true
                 && x.SubscriptionSettings.UpdateSchedule == UpdateSchedule.EveryDay
                 && x.SubscriptionSettings.DayAmountToUpdate != DayAmountToUpdate.NotSet
-                && x.SubscriptionSettings.DayOfUpdate == null
+                && x.SubscriptionSettings.DayOfUpdate != DayOfWeekEx.NotSet
                 && x.SubscriptionSettings.WeekToSend == WeekToSend.NotSet
                 && x.SubscriptionSettings.TimeOfDay == TimeOfDay)
             .AsSplitQuery()

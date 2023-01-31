@@ -447,3 +447,6 @@ FodyWeavers.xsd
 /.local-chromiums/chrome-win/locales/ar.pak
 /.local-chromiums/chrome-win/locales/ar-XB.pak
 /.local-chromiums/chrome-win/locales/am.pak
+/ChromiumKiller
+/TelegramBotAPI/Middlewares
+/JoinedSchedule.sql

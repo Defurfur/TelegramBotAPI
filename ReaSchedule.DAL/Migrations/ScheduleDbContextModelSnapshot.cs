@@ -175,7 +175,7 @@ namespace ReaSchedule.DAL.Migrations
                     b.Property<int>("DayAmountToUpdate")
                         .HasColumnType("int");
 
-                    b.Property<int?>("DayOfUpdate")
+                    b.Property<int>("DayOfUpdate")
                         .HasColumnType("int");
 
                     b.Property<bool>("IncludeToday")

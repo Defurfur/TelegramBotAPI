@@ -5,6 +5,9 @@ using Coravel.Invocable;
 using ScheduleUpdateService.Abstractions;
 using System.Diagnostics;
 using Humanizer;
+using System.Text.RegularExpressions;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace ScheduledActivities.Jobs;
 
@@ -13,7 +16,7 @@ public class UpdateGroupsScheduleJob : IInvocable
     private readonly IParserPipeline _parserPipeline;
     private readonly ScheduleDbContext _context;
     private readonly ILogger<UpdateGroupsScheduleJob> _logger;
-
+    private int _updatedGroupCounter;
     public UpdateGroupsScheduleJob(
         IParserPipeline parserPipeline,
         ScheduleDbContext context,
@@ -27,15 +30,14 @@ public class UpdateGroupsScheduleJob : IInvocable
     public async Task Invoke()
     {
         var stopwatch = Stopwatch.StartNew();
-        int updatedGroupCounter = 0;
 
         try
         {
-           updatedGroupCounter = await Process();
+           await Process();
         }        
         catch(Exception ex)
         {
-            _logger.LogInformation(
+            _logger.LogError(
                 ex,
                 "{ExceptionName} has been thrown during {ClassType} execution",
                 ex.GetType().Name,
@@ -47,16 +49,17 @@ public class UpdateGroupsScheduleJob : IInvocable
             stopwatch.Stop();
             _logger.LogInformation("{UpdatedGroupsNumber} groups' schedules have changed" +
                 " and been updated in the database. Task took {Time} to finish",
-                updatedGroupCounter,
+                _updatedGroupCounter,
                 stopwatch.Elapsed.Humanize(2));
         }
 
 
     }
 
-    private async Task<int> Process()
+    private async Task Process()
     {
-        int counter = 0;
+        _updatedGroupCounter = 0;
+
         var reaGroupList = await _context
        .ReaGroups
        .Include(x => x.ScheduleWeeks!)
@@ -67,6 +70,7 @@ public class UpdateGroupsScheduleJob : IInvocable
 
         _logger.LogInformation("Received {GroupCount} groups from database." +
             " Starting update process",
+
             reaGroupList.Count);
 
         var tasks = reaGroupList
@@ -81,17 +85,17 @@ public class UpdateGroupsScheduleJob : IInvocable
             (x, y) => (x, y));
 
 
-        foreach (var (oldG, newG) in joinedGroups)
+        foreach (var (oldGroup, newGroup) in joinedGroups)
         {
-            if (oldG.Hash != newG.Hash)
+            
+            if (oldGroup.Hash != newGroup.Hash)
             {
-                oldG.ScheduleWeeks = newG.ScheduleWeeks;
-                oldG.Hash = newG.Hash;
-                counter++;
+                oldGroup.ScheduleWeeks = newGroup.ScheduleWeeks;
+                oldGroup.Hash = newGroup.Hash;
+                _updatedGroupCounter++;
             }
         }
 
         await _context.SaveChangesAsync();
-        return counter;
     }
 }

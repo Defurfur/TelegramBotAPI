@@ -42,6 +42,8 @@ namespace ReaSchedule.Models
 
     public enum DayOfWeekEx
     {
+        [Description("Не выставлено")]
+        NotSet = 100,
         [Description("воскресенье")]
         Sunday = 0,
         [Description("понедельник")]

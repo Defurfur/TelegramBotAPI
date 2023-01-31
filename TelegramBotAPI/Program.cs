@@ -1,6 +1,7 @@
 
 using Coravel;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.Extensions.Configuration.UserSecrets;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Newtonsoft.Json;
@@ -11,28 +12,28 @@ using ScheduleUpdateService.Abstractions;
 using ScheduleUpdateService.Extensions;
 using ScheduleUpdateService.Services;
 using System.Diagnostics;
+using System.Text.Json.Serialization;
 using Telegram.Bot;
 using TelegramBotAPI;
+using TelegramBotAPI.Middlewares;
 using TelegramBotService;
 using TelegramBotService.Abstractions;
 using TelegramBotService.BackgroundTasks;
 using TelegramBotService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Configuration.AddUserSecrets<Program>();
 
 var botConfig = builder.Configuration.GetSection("BotConfiguration").Get<BotConfiguration>();
-var botToken = botConfig.BotToken ?? string.Empty;
-
-Console.WriteLine(JsonConvert.SerializeObject(botConfig));
-Console.WriteLine( Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"));
+var botToken = botConfig?.BotToken ?? string.Empty;
 
 builder.Logging.AddEventLog();
 
 builder.Services.AddHostedService<ConfigureWebhook>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
-builder.Services.AddHttpClient("TelegramWebhook")
+builder.Services
+    .AddHttpClient("TelegramWebhook")
     .AddTypedClient<ITelegramBotClient>(httpClient => new TelegramBotClient(botToken, httpClient));
 
 builder.Services.AddDbContext<ScheduleDbContext>(options =>
@@ -40,28 +41,38 @@ builder.Services.AddDbContext<ScheduleDbContext>(options =>
                 builder.Configuration.GetConnectionString("SQLServerExpress"),
                 x => x.MigrationsAssembly("ReaSchedule.DAL")),
                 ServiceLifetime.Scoped);
+
 builder.Services.AddScoped<HandleUpdateService>();
+builder.Services.AddScoped<IContextUpdateService, ContextUpdateService>();
+builder.Services.AddScoped<IGroupSearchPipeline, GroupSearchPipeline>();
+builder.Services.AddScoped<IArgumentExtractorService, ArgumentExtractorService>();
+builder.Services.AddScoped<IUserUpdater, UserUpdater>();
+builder.Services.AddScoped<IScheduleLoader, ScheduleLoader>();
+
+builder.Services.AddSingleton<IMessageSender, MessageSender>();
+builder.Services.AddSingleton<ISpecificChainFactory, ChainFactory>();
+builder.Services.AddSingleton<ICallbackMessageUpdater, CallbackMessageUpdater>();
+builder.Services.AddSingleton<IScheduleFormatter, ScheduleFormatter>();
+builder.Services.AddSingleton<IUserSettingsFormatter, UserSettingsFormatter>();
+builder.Services.AddSingleton<IChromiumKiller, ChromiumKiller>();
+
 builder.Services.AddScheduleUpdateService(ServiceLifetime.Singleton);
 builder.Services.AddQueue();
 builder.Services.AddScheduler();
-builder.Services.AddScoped<IContextUpdateService, ContextUpdateService>();
-builder.Services.AddSingleton<IMessageSender, MessageSender>();
-builder.Services.AddScoped<IGroupSearchPipeline, GroupSearchPipeline>();
-builder.Services.AddScoped<IArgumentExtractorService, ArgumentExtractorService>();
-builder.Services.AddSingleton<ISpecificChainFactory, ChainFactory>();
-builder.Services.AddScoped<IUserUpdater, UserUpdater>();
-builder.Services.AddSingleton<ICallbackMessageUpdater, CallbackMessageUpdater>();
-builder.Services.AddScoped<IScheduleLoader, ScheduleLoader>();
-builder.Services.AddSingleton<IScheduleFormatter, ScheduleFormatter>();
-builder.Services.AddSingleton<IUserSettingsFormatter, UserSettingsFormatter>();
+
 builder.Services.AddTransient<TryFindGroupAndChangeUser>();
 builder.Services.AddTransient<TryFindGroupAndRegisterUser>();
-builder.Services.AddTransient<SendScheduleToSubsDailyJob>();
-builder.Services.AddTransient<SendScheduleToSubsWeeklyJob>();
-builder.Services.AddTransient<UpdateGroupsScheduleJob>();
 
-//ScheduleLoader : Sc > ScheduleFormatter : St AND ContextUpdateServicce : Sc > DbContext : Sc
-//IMessageSender : St > UserSettingsFormatter : St
+builder.Services.AddTransient<SendDailyScheduleMorningJob>();
+builder.Services.AddTransient<SendDailyScheduleAfternoonJob>();
+builder.Services.AddTransient<SendDailyScheduleEveningJob>();
+
+builder.Services.AddTransient<SendWeeklyScheduleMorningJob>();
+builder.Services.AddTransient<SendWeeklyScheduleAfternoonJob>();
+builder.Services.AddTransient<SendWeeklyScheduleEveningJob>();
+
+builder.Services.AddTransient<UpdateGroupsScheduleJob>();
+builder.Services.AddTransient<GlobalErrorHandlerMiddleware>();
 
 var app = builder.Build();
 
@@ -69,35 +80,38 @@ app.Services.UseScheduler(scheduler =>
 {
 
     scheduler
-        .Schedule<SendScheduleToSubsDailyJob>()
+        .Schedule<SendWeeklyScheduleMorningJob>()
         .DailyAtHour(4);
+        //.RunOnceAtStart();
 
     scheduler
-        .Schedule<SendScheduleToSubsDailyJob>()
+        .Schedule<SendWeeklyScheduleAfternoonJob>()
         .DailyAtHour(10);
         //.EveryTenMinutes();
 
     scheduler
-        .Schedule<SendScheduleToSubsDailyJob>()
+        .Schedule<SendWeeklyScheduleEveningJob>()
         .DailyAtHour(16);
 
     scheduler
-        .ScheduleWithParams<SendScheduleToSubsWeeklyJob>(TimeOfDay.Morning)
+        .Schedule<SendDailyScheduleMorningJob>()
         .DailyAtHour(4);
 
     scheduler
-        .ScheduleWithParams<SendScheduleToSubsWeeklyJob>(TimeOfDay.Afternoon)
+        .Schedule<SendDailyScheduleAfternoonJob>()
         .DailyAtHour(10);
 
     scheduler
-        .ScheduleWithParams<SendScheduleToSubsWeeklyJob>(TimeOfDay.Evening)
+        .Schedule<SendDailyScheduleEveningJob>()
         .DailyAtHour(16);
 
 
     scheduler
         .Schedule<UpdateGroupsScheduleJob>()
-        .DailyAtHour(10)
-        .PreventOverlapping("Updater");
+        .EveryTenMinutes()
+        //.DailyAtHour(10)
+        .PreventOverlapping("Updater")
+        .RunOnceAtStart();
     scheduler
         .Schedule<UpdateGroupsScheduleJob>()
         .DailyAtHour(14)
@@ -129,16 +143,15 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseHttpLogging();
-
+app.UseMiddleware<GlobalErrorHandlerMiddleware>();
 
 app.MapPost($"/bot/{botConfig.EscapedBotToken}", async (
-    ITelegramBotClient botClient,
     HttpRequest request,
     HandleUpdateService handleUpdateService,
     NewtonsoftJsonUpdate update) =>
 {
     await handleUpdateService.EchoAsync(update);
-
+  
     return Results.Ok();
 })
 .WithName("TelegramWebhook");

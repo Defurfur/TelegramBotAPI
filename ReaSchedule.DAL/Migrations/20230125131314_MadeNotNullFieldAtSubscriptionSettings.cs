@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ReaSchedule.DAL.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialMigrToSQLExpress : Migration
+    public partial class MadeNotNullFieldAtSubscriptionSettings : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -84,7 +84,7 @@ namespace ReaSchedule.DAL.Migrations
                     UserId = table.Column<int>(type: "int", nullable: false),
                     SubscriptionEnabled = table.Column<bool>(type: "bit", nullable: false),
                     UpdateSchedule = table.Column<int>(type: "int", nullable: false),
-                    DayOfUpdate = table.Column<int>(type: "int", nullable: true),
+                    DayOfUpdate = table.Column<int>(type: "int", nullable: false),
                     DayAmountToUpdate = table.Column<int>(type: "int", nullable: false),
                     TimeOfDay = table.Column<int>(type: "int", nullable: false),
                     WeekToSend = table.Column<int>(type: "int", nullable: false),

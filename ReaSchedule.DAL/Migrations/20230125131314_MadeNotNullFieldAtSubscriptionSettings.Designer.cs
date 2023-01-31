@@ -12,8 +12,8 @@ using ReaSchedule.DAL;
 namespace ReaSchedule.DAL.Migrations
 {
     [DbContext(typeof(ScheduleDbContext))]
-    [Migration("20230113105106_InitialMigrToSQLExpress")]
-    partial class InitialMigrToSQLExpress
+    [Migration("20230125131314_MadeNotNullFieldAtSubscriptionSettings")]
+    partial class MadeNotNullFieldAtSubscriptionSettings
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -178,7 +178,7 @@ namespace ReaSchedule.DAL.Migrations
                     b.Property<int>("DayAmountToUpdate")
                         .HasColumnType("int");
 
-                    b.Property<int?>("DayOfUpdate")
+                    b.Property<int>("DayOfUpdate")
                         .HasColumnType("int");
 
                     b.Property<bool>("IncludeToday")

@@ -15,6 +15,7 @@ using TelegramBotService.Abstractions;
 using Telegram.Bot.Types;
 using ReaSchedule.Models;
 using User = ReaSchedule.Models.User;
+using XAct;
 
 namespace ScheduledActivities.Jobs;
 
@@ -26,24 +27,11 @@ public abstract class AbstractWeeklyScheduleJob : IInvocable
     protected abstract ILogger<AbstractWeeklyScheduleJob> Logger { get; set; }
     protected abstract TimeOfDay TimeOfDay { get; set; }
     protected abstract List<User>? Users { get; set; }
-    //public AbstractWeeklyScheduleJob(
-    //    ScheduleDbContext context,
-    //    ILogger<AbstractWeeklyScheduleJob> logger,
-    //    IScheduleLoader loader,
-    //    IMessageSender sender,
-    //    TimeOfDay timeOfDay)
-    //{
-    //    _context = context;
-    //    _logger = logger;
-    //    _loader = loader;
-    //    _sender = sender;
-    //    _timeOfDay = timeOfDay;
-    //}
 
 
     public async Task Invoke()
     {
-        Logger.LogInformation("{Task} with param 'timeofDay' = '{timeOfDay}' has started",
+        Logger.LogDebug("{Task} with param 'timeofDay' = '{timeOfDay}' has started",
             GetType().Name,
             TimeOfDay.Humanize());
 
@@ -55,24 +43,25 @@ public abstract class AbstractWeeklyScheduleJob : IInvocable
         }
         catch(Exception ex)
         {
-            Logger.LogInformation(ex, "{exception} was thrown", ex.GetType().Name);
+            Logger.LogError(ex, "{exception} was thrown", ex.GetType().Name);
         }
         finally
         {
             stopwatch.Stop();
-            var userAmount = Users is null 
-                ? 0 
-                : Users.Count;
+
+            var loggingString = Users is null
+                ? "No users, whos settings satisfy task conditions have been found"
+                : $"{Users.Count} users have recieved schedule";
 
             Users = null;
 
-            Logger.LogInformation("[Metrics] {Task} with params " +
-                "'timeofDay' = '{timeOfDay}'  took {Time} to finish. {UserAmount} " +
-                "users have recieved schedule",
-            GetType().Name,
-            TimeOfDay.Humanize(),
-            stopwatch.Elapsed.Humanize(2),
-            userAmount);
+            Logger.LogInformation(
+                "[Metrics] {Task} with params " +
+                "'timeofDay' = '{timeOfDay}'  took {elapsedTime} to finish. {UserAmuntString}",
+                GetType().Name,
+                TimeOfDay.Humanize(),
+                stopwatch.Elapsed.Humanize(2),
+                loggingString);
 
         }
               
@@ -80,6 +69,8 @@ public abstract class AbstractWeeklyScheduleJob : IInvocable
 
     private protected async Task Process()
     {
+        var todayAsInt = (int)DateTime.Now.DayOfWeek;
+
         Users = await Context
             .Users
             .Include(x => x.SubscriptionSettings)
@@ -89,7 +80,7 @@ public abstract class AbstractWeeklyScheduleJob : IInvocable
                 && x.SubscriptionSettings.DayAmountToUpdate == DayAmountToUpdate.NotSet
                 && x.SubscriptionSettings.TimeOfDay != TimeOfDay.NotSet
                 && x.SubscriptionSettings.WeekToSend != WeekToSend.NotSet
-                && (int)x.SubscriptionSettings.DayOfUpdate! == (int)DateTime.Now.DayOfWeek
+                && (int)x.SubscriptionSettings.DayOfUpdate == todayAsInt
                 )
             .AsSplitQuery()
             .ToListAsync();

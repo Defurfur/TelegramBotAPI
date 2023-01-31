@@ -1,20 +1,25 @@
-﻿using ReaSchedule.Models;
+﻿using Microsoft.Extensions.Logging;
+using ReaSchedule.Models;
 using ScheduleUpdateService.Abstractions;
+using System.IO;
 
 namespace ScheduleUpdateService.Services;
 public class ParserPipeline : IParserPipeline
 {
     private readonly IScheduleParser _scheduleLoader;
     private readonly IEntityUpdater _entityUpdater;
-    public int WeekCountToParse { get; set; } = 2;
+    private readonly ILogger<ParserPipeline> _logger;
+    public int WeekCountToParse { get; private set; } = 2;
 
     public ParserPipeline(
         IScheduleParser scheduleLoader,
-        IEntityUpdater entituUpdater)
+        IEntityUpdater entituUpdater,
+        ILogger<ParserPipeline> logger)
     {
         _scheduleLoader = scheduleLoader;
         _entityUpdater = entituUpdater;
         WeekCountToParse = WeekCountToParse;
+        _logger = logger;
     }
 
 
@@ -23,11 +28,27 @@ public class ParserPipeline : IParserPipeline
         if (WeekCountToParse < 1)
             throw new Exception("Cannot parse 0 or less weeks");
 
-        var listOfWeekClassWrappers = await _scheduleLoader
-            .LoadPageContentAndParse(WeekCountToParse, reaGroup);
+        List<WeeklyClassesWrapper> listOfWeekClassWrappers = new();
+        ReaGroup updatedReaGroup = new();
 
-        ReaGroup updatedReaGroup = _entityUpdater
-            .UpdateReaGroup(reaGroup, listOfWeekClassWrappers);
+        try
+        {
+            listOfWeekClassWrappers = await _scheduleLoader
+                .LoadPageContentAndParse(WeekCountToParse, reaGroup);
+
+            updatedReaGroup = _entityUpdater
+                .UpdateReaGroup(reaGroup, listOfWeekClassWrappers);
+        }
+        catch (IOException ioException)
+        {
+            _logger.LogInformation(ioException, "[ParserPipeline] {ExceptionName} has been thrown during task execution",
+                ioException.GetType().Name);
+        }
+        catch(Exception ex)
+        {
+            _logger.LogError(ex, "[ParserPipeline] {ExceptionName} has been thrown during task execution",
+               ex.GetType().Name);
+        }
 
 
         return updatedReaGroup;
