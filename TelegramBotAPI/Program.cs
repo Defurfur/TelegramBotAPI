@@ -82,12 +82,11 @@ app.Services.UseScheduler(scheduler =>
     scheduler
         .Schedule<SendWeeklyScheduleMorningJob>()
         .DailyAtHour(4);
-        //.RunOnceAtStart();
+    //.RunOnceAtStart();
 
     scheduler
         .Schedule<SendWeeklyScheduleAfternoonJob>()
         .DailyAtHour(10);
-        //.EveryTenMinutes();
 
     scheduler
         .Schedule<SendWeeklyScheduleEveningJob>()
@@ -108,30 +107,35 @@ app.Services.UseScheduler(scheduler =>
 
     scheduler
         .Schedule<UpdateGroupsScheduleJob>()
-        .EveryTenMinutes()
-        //.DailyAtHour(10)
+        .Hourly()
         .PreventOverlapping("Updater")
         .RunOnceAtStart();
-    scheduler
-        .Schedule<UpdateGroupsScheduleJob>()
-        .DailyAtHour(14)
-        .PreventOverlapping("Updater");
-    scheduler
-        .Schedule<UpdateGroupsScheduleJob>()
-        .DailyAtHour(18)
-        .PreventOverlapping("Updater");
-    scheduler
-        .Schedule<UpdateGroupsScheduleJob>()
-        .DailyAtHour(22)
-        .PreventOverlapping("Updater");
-    scheduler
-        .Schedule<UpdateGroupsScheduleJob>()
-        .DailyAtHour(2)
-        .PreventOverlapping("Updater");
-    scheduler
-        .Schedule<UpdateGroupsScheduleJob>()
-        .DailyAtHour(6)
-        .PreventOverlapping("Updater");
+    //scheduler
+    //    .Schedule<UpdateGroupsScheduleJob>()
+    //    .EveryTenMinutes()
+    //    //.DailyAtHour(10)
+    //    .PreventOverlapping("Updater")
+    //    .RunOnceAtStart();
+    //scheduler
+    //    .Schedule<UpdateGroupsScheduleJob>()
+    //    .DailyAtHour(14)
+    //    .PreventOverlapping("Updater");
+    //scheduler
+    //    .Schedule<UpdateGroupsScheduleJob>()
+    //    .DailyAtHour(18)
+    //    .PreventOverlapping("Updater");
+    //scheduler
+    //    .Schedule<UpdateGroupsScheduleJob>()
+    //    .DailyAtHour(22)
+    //    .PreventOverlapping("Updater");
+    //scheduler
+    //    .Schedule<UpdateGroupsScheduleJob>()
+    //    .DailyAtHour(2)
+    //    .PreventOverlapping("Updater");
+    //scheduler
+    //    .Schedule<UpdateGroupsScheduleJob>()
+    //    .DailyAtHour(6)
+    //    .PreventOverlapping("Updater");
 
 });
 

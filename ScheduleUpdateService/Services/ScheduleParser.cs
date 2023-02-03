@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Polly;
 using PuppeteerSharp;
 using ReaSchedule.Models;
 using ScheduleUpdateService.Abstractions;
@@ -106,6 +107,12 @@ namespace ScheduleUpdateService.Services;
 ////}
 public class JsScheduleParser : IScheduleParser
 {
+    private readonly IAsyncPolicy<JToken> _retryPolicy =
+        Policy<JToken>
+        .Handle<IOException>()
+        .Or<PuppeteerException>()
+        .WaitAndRetryAsync(2, x => TimeSpan.FromSeconds(5));
+
     private readonly ILogger<JsScheduleParser> _logger;
     private readonly IBrowserWrapper _browserWrapper;
     private readonly NavigationOptions _navigationOptions = new()
@@ -124,23 +131,31 @@ public class JsScheduleParser : IScheduleParser
     {
         string script = JsScriptLibrary.GetClassesInfoByData(groupName, weekNumber);
 
-        JToken jToken = null;
-
-        try
-        {
-            jToken = await page.EvaluateExpressionAsync(script);
-        }
-        catch (Exception ex)
+        page.Error += (sender, errorArgs) =>
         {
             _logger.LogWarning(
-                ex,
-                "{ExceptionName} has been thrown during execution of the JS script",
-                ex.GetType().Name);
-        }
+                "Evaluating script failed with error: {error}",
+                errorArgs.Error);
 
-        Debug.Assert(jToken != null);
+            throw new Exception($"Page crashed before an attempt to parse data with following error: {errorArgs.Error}");
+        };
 
-        ArgumentNullException.ThrowIfNull(nameof(jToken));
+        page.PageError += (sender, errorArgs) =>
+        {
+            _logger.LogWarning(
+                "Evaluating script failed with error: {error}",
+                errorArgs.Message);
+
+            throw new Exception($"Page crashed before an attempt to parse data with following error: {errorArgs.Message}");
+
+        };
+
+        var jToken = await _retryPolicy
+            .ExecuteAsync(() => page.EvaluateExpressionAsync(script));
+
+        ArgumentNullException.ThrowIfNull(jToken);
+
+        //var jToken = await page.WaitForExpressionAsync(script, new WaitForFunctionOptions() { Timeout = 0});
 
         return jToken;
     }
@@ -148,8 +163,8 @@ public class JsScheduleParser : IScheduleParser
     {
         List<string> weeklyClassesList = new();
 
-        var jToken = await GetJsomFromPage(page, weekNumber, groupName);
-
+        var jToken = await _retryPolicy
+            .ExecuteAsync( () => GetJsomFromPage(page, weekNumber, groupName));
 
         if (jToken.ToString() == "")
         {

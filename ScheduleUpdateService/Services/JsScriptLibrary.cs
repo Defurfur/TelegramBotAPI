@@ -5,20 +5,21 @@ namespace ScheduleUpdateService.Services;
 public static class JsScriptLibrary
 {
     public const string getScheduleFunc = """
+
         async function getSchedule(group, week)
-        {
-            var schedule;
-            await $.ajax({
-            url: '/Schedule/ScheduleCard', 
-                    type: 'GET', 
-                    data: { selection: group, weekNum: week, catfilter: 0 }, 
-                    dataType: 'html', 
-                    success: function(data) {
-                    schedule = data;
-                }
-            }) 
-                return schedule;
-        };
+            {
+                var schedule;
+                await $.ajax({
+                url: '/Schedule/ScheduleCard', 
+                        type: 'GET', 
+                        data: { selection: group, weekNum: week, catfilter: 0 }, 
+                        dataType: 'html', 
+                        success: function(data) {
+                        schedule = data;
+                    }
+                }); 
+                    return schedule;
+            };
         """;
 
     //!! Uncomment to get function for browser console !!
@@ -39,18 +40,20 @@ public static class JsScriptLibrary
     //};
 
     public const string getWeeklyClassesById = """
-        async function GetWeeklyClassesInfo(e){ 
-            var modalInfo; 
-            await $.ajax({ 
-                url: '/Schedule/GetDetailsById', 
-                type: 'GET', 
-                data: {id: e }, 
-                dataType: 'html', 
-                success: function (data) { 
-                    modalInfo = data; 
-                } 
-            }) 
-        return modalInfo; 
+
+        async function GetWeeklyClassesInfo(e)
+            { 
+                var modalInfo;
+                await $.ajax({ 
+                    url: '/Schedule/GetDetailsById', 
+                    type: 'GET', 
+                    data: {id: e }, 
+                    dataType: 'html', 
+                    success: function (data) { 
+                        modalInfo = data;
+                    } 
+                }); 
+            return modalInfo;
         };
         """;
 
@@ -69,29 +72,29 @@ public static class JsScriptLibrary
     //};
 
     public const string aggregateClassesInfoFunc = """
+
         async function aggregateClassesInfo(classList)
-        {
-            var classesInfo = [];
-            if (!classList[0].includes(','))
             {
-                for (let i = 0; i < classList.length; i++)
+                var classesInfo = [];
+                if (!classList[0].includes(','))
                 {
-                    var classInfo = await GetWeeklyClassesInfo(classList[i]);
-                    classesInfo.push(classInfo);
+                    for (let i = 0; i < classList.length; i++)
+                    {
+                        var classInfo = await GetWeeklyClassesInfo(classList[i])
+                        classesInfo.push(classInfo)
+                    };
                 }
-            }
-            else
-            {
-                for (let j = 0; j < classList.length; j++)
+                else
                 {
-                    classList[j].split(', ');
-                    var classInfo = await GetWeeklyClassesInfoByData(group, classList[j].split(', ')[0],
-        classList[j].split(', ')[1]);
-                    classesInfo.push(classInfo);
-                }
-            }
-            return classesInfo;
-        };
+                    for (let j = 0; j < classList.length; j++)
+                    {
+                        var splitted = classList[j].split(', ');
+                        var classInfo = await GetWeeklyClassesInfoByData(group, splitted[0], splitted[1]);
+                        classesInfo.push(classInfo);
+                    };
+                };
+                return classesInfo;
+            };
         """;
 
     //async function aggregateClassesInfo(classList)
@@ -119,20 +122,21 @@ public static class JsScriptLibrary
     //};
 
     public const string getWeeklyClassesByData = """
+
         async function GetWeeklyClassesInfoByData(group, date, slot)
-        {
-            var modalInfo;
-            await $.ajax({
-            url: '/Schedule/GetDetails', 
-                        type: 'GET', 
-                        data: { selection: group, date: date, timeSlot: slot }, 
-                        dataType: 'html', 
-                        success: function(data) {
-                    modalInfo = data;
-                }
-            }) 
-                return modalInfo;
-        };
+            {
+                var modalInfo;
+                await $.ajax({
+                url: '/Schedule/GetDetails', 
+                            type: 'GET', 
+                            data: { selection: group, date: date, timeSlot: slot }, 
+                            dataType: 'html', 
+                            success: function(data) {
+                        modalInfo = data;
+                    }
+                });
+                    return modalInfo;
+            };
         """;
 
     //!! Uncomment to get function for browser console !!
@@ -158,22 +162,23 @@ public static class JsScriptLibrary
         getWeeklyClassesByData +
         aggregateClassesInfoFunc +
         """
+
         async function getClassesInfoByDateAndSlot(group, week)
-        {
-            var schedule = await getSchedule(group, week);
-            re = /(?<=\(\s&#39;)([^\)\"\>]*)/gm;
-            dirtyArray = schedule.match(re);
-            if (dirtyArray == null)
             {
-                return "";
-            }
-            DateAndSlotArray = [];
-            dirtyArray.forEach(e => { DateAndSlotArray.push(e.replaceAll('&#39;', ''))});
-            var classesInfo = await aggregateClassesInfo(DateAndSlotArray);
+                var schedule = await getSchedule(group, week);
+                var re = /(?<=\(\s&#39;)([^\)\"\>]*)/gm;
+                var dirtyArray = schedule.match(re);
+                if (dirtyArray == null)
+                {
+                    return "";
+                };
+                DateAndSlotArray = [];
+                dirtyArray.forEach(e => { DateAndSlotArray.push(e.replaceAll('&#39;', ''))});
+                var classesInfo = await aggregateClassesInfo(DateAndSlotArray);
 
-            return classesInfo;
+                return classesInfo;
 
-        }
+            };
         getClassesInfoByDateAndSlot(group, week);
         """;
 
@@ -205,9 +210,11 @@ public static class JsScriptLibrary
     /// <returns></returns>
     public static string GetClassesInfoByData(string group, int week)
     {
-        string JsPipeline =
-            $"group = '{group}';\r\n" +
-            $"week = {week};\r\n" +
+        string JsPipeline = $$"""
+            group = '{{group}}';
+            week = {{week}};
+
+            """ +
             getClassesInfoByDataFunc;
 
         return JsPipeline;

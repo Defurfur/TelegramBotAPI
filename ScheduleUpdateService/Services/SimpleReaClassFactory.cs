@@ -26,18 +26,19 @@ namespace ScheduleUpdateService.Services
         {
             var reaClass = new ReaClass()
             {
-                ClassName = _classNameRE.Match(classInfo).Value,
+                ClassName = _classNameRE.Match(classInfo).Value
+                    .Replace("&quot;", "\""),
 
                 ClassType = _classTypeRE.Match(classInfo).Value,
 
                 OrdinalNumber = _classOrdinalNumberRE.Match(classInfo).Value,
 
                 Audition = _auditionRe.Match(classInfo).Value
-                .Replace("\r", "")
-                .Replace("\n", "")
-                .Trim()
-                .Replace("-","- ")
-                .Replace("  "," "),
+                    .Replace("\r", "")
+                    .Replace("\n", "")
+                    .Trim()
+                    .Replace("-","- ")
+                    .Replace("  "," "),
 
                 Professor = _professorRE.Match(classInfo).Value,
 
