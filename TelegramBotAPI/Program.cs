@@ -147,15 +147,22 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseHttpLogging();
-app.UseMiddleware<GlobalErrorHandlerMiddleware>();
+//app.UseMiddleware<GlobalErrorHandlerMiddleware>();
+
+app.MapGet("/", () =>
+{
+    return Results.Ok("Everything works fine");
+});
+
 
 app.MapPost($"/bot/{botConfig.EscapedBotToken}", async (
     HttpRequest request,
     HandleUpdateService handleUpdateService,
     NewtonsoftJsonUpdate update) =>
 {
+
     await handleUpdateService.EchoAsync(update);
-  
+
     return Results.Ok();
 })
 .WithName("TelegramWebhook");

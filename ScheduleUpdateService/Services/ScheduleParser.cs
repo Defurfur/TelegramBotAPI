@@ -112,6 +112,7 @@ public class JsScheduleParser : IScheduleParser
         .Handle<IOException>()
         .Or<PuppeteerException>()
         .WaitAndRetryAsync(2, x => TimeSpan.FromSeconds(5));
+        
 
     private readonly ILogger<JsScheduleParser> _logger;
     private readonly IBrowserWrapper _browserWrapper;
@@ -137,7 +138,7 @@ public class JsScheduleParser : IScheduleParser
                 "Evaluating script failed with error: {error}",
                 errorArgs.Error);
 
-            throw new Exception($"Page crashed before an attempt to parse data with following error: {errorArgs.Error}");
+            throw new PuppeteerException($"Page crashed before an attempt to parse data with following error: {errorArgs.Error}");
         };
 
         page.PageError += (sender, errorArgs) =>
@@ -146,7 +147,7 @@ public class JsScheduleParser : IScheduleParser
                 "Evaluating script failed with error: {error}",
                 errorArgs.Message);
 
-            throw new Exception($"Page crashed before an attempt to parse data with following error: {errorArgs.Message}");
+            throw new PuppeteerException($"Page crashed before an attempt to parse data with following error: {errorArgs.Message}");
 
         };
 

@@ -30,6 +30,7 @@
 	
   <ItemGroup>
     <_WebToolingArtifacts Remove="Properties\PublishProfiles\Debug Profile.pubxml" />
+    <_WebToolingArtifacts Remove="Properties\PublishProfiles\Release Profile.pubxml" />
   </ItemGroup>
 
   <ItemGroup>

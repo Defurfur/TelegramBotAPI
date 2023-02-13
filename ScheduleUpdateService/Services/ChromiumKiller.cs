@@ -1,6 +1,7 @@
 ﻿using Humanizer;
 using Microsoft.Extensions.Logging;
 using ScheduleUpdateService.Abstractions;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Net;
 using System.Reflection.Metadata.Ecma335;
@@ -24,10 +25,27 @@ public class ChromiumKiller : IChromiumKiller
     }
     public void KillChromiumProcesses(string path = default, int timeout = 5000)
     {
-        var processes =
-            path == default
-            ? GetProcesses()
-            : GetProcesses(path);
+        List<Process> processes = new();
+
+        try
+        {
+            processes =
+                path == default
+                ? GetProcesses()
+                : GetProcesses(path);
+
+        }
+        catch (Win32Exception win32ex)
+        {
+            if(_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation(
+                    win32ex,
+                    "Win32Exception has been thrown during while an attempt to KillChromiumProccesses with path = {path}",
+                    path);
+            };
+        }
+
 
         _logger.LogDebug("[ChromiumKiller] Starting process of killing chromiums. " +
             "{chromiumCount} chromiums found.", processes.Count);
@@ -62,6 +80,10 @@ public class ChromiumKiller : IChromiumKiller
                     }
                 }
             }
+            catch(Win32Exception winEx)
+            {
+                continue;
+            }
             catch (Exception ex)
             {
                 _logger.LogError(
@@ -73,7 +95,7 @@ public class ChromiumKiller : IChromiumKiller
             {
                 stopwatch.Stop();
 
-                _logger.LogDebug("{processNumber} process killed within {elapsedTime}",
+                _logger.LogInformation("{processNumber} process killed within {elapsedTime}",
                     i + 1,
                     stopwatch.Elapsed.Humanize(2));
 
