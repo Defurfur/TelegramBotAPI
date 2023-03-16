@@ -23,23 +23,23 @@ public class ParserPipeline : IParserPipeline
     }
 
 
-    public async Task<ReaGroup> ParseAndUpdate(ReaGroup reaGroup)
+    public async Task<ReaGroup> ParseAndUpdate(ReaGroup reaGroup, CancellationToken ct = default)
     {
         if (WeekCountToParse < 1)
             throw new Exception("Cannot parse 0 or less weeks");
 
-        List<WeeklyClassesWrapper> listOfWeekClassWrappers = new();
+        List<WeeklyClassesWrapper> listOfWeekClassWrappers;
         ReaGroup updatedReaGroup = new();
 
         try
         {
             listOfWeekClassWrappers = await _scheduleLoader
-                .LoadPageContentAndParse(WeekCountToParse, reaGroup);
+                .LoadPageContentAndParse(WeekCountToParse, reaGroup, ct);
 
             updatedReaGroup = _entityUpdater
                 .UpdateReaGroup(reaGroup, listOfWeekClassWrappers);
         }
-        catch (IOException ioException)
+        catch(IOException ioException)
         {
             _logger.LogInformation(ioException, "[ParserPipeline] {ExceptionName} has been thrown during task execution",
                 ioException.GetType().Name);
@@ -48,6 +48,7 @@ public class ParserPipeline : IParserPipeline
         {
             _logger.LogError(ex, "[ParserPipeline] {ExceptionName} has been thrown during task execution",
                ex.GetType().Name);
+            throw;
         }
 
 

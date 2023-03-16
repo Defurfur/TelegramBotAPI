@@ -117,9 +117,10 @@ public class JsScheduleParser : IScheduleParser
     private readonly ILogger<JsScheduleParser> _logger;
     private readonly IBrowserWrapper _browserWrapper;
     private readonly NavigationOptions _navigationOptions = new()
-    {   Timeout = 0,
+    {   Timeout = 300000,
         WaitUntil = new[] { WaitUntilNavigation.Load } };
-    private readonly string _reaWebsiteLink = "https://rasp.rea.ru/";
+
+    private const string _reaWebsiteLink = "https://rasp.rea.ru/";
 
     public JsScheduleParser(
         IBrowserWrapper browserWrapper,
@@ -128,31 +129,18 @@ public class JsScheduleParser : IScheduleParser
         _browserWrapper = browserWrapper;
         _logger = logger;
     }
-    private async Task<JToken> GetJsomFromPage(IPage page, int weekNumber, string groupName)
+    private async Task<JToken> GetJsomFromPage(
+        IPage page,
+        int weekNumber,
+        string groupName,
+        CancellationToken ct = default)
     {
         string script = JsScriptLibrary.GetClassesInfoByData(groupName, weekNumber);
 
-        page.Error += (sender, errorArgs) =>
-        {
-            _logger.LogWarning(
-                "Evaluating script failed with error: {error}",
-                errorArgs.Error);
-
-            throw new PuppeteerException($"Page crashed before an attempt to parse data with following error: {errorArgs.Error}");
-        };
-
-        page.PageError += (sender, errorArgs) =>
-        {
-            _logger.LogWarning(
-                "Evaluating script failed with error: {error}",
-                errorArgs.Message);
-
-            throw new PuppeteerException($"Page crashed before an attempt to parse data with following error: {errorArgs.Message}");
-
-        };
+        ct.ThrowIfCancellationRequested();
 
         var jToken = await _retryPolicy
-            .ExecuteAsync(() => page.EvaluateExpressionAsync(script));
+            .ExecuteAsync((ct) => page.EvaluateExpressionAsync(script), ct);
 
         ArgumentNullException.ThrowIfNull(jToken);
 
@@ -160,17 +148,21 @@ public class JsScheduleParser : IScheduleParser
 
         return jToken;
     }
-    private async Task<List<string>> GetJsonAndParse(IPage page, int weekNumber, string groupName)
+    private async Task<List<string>> GetJsonAndParse(
+        IPage page,
+        int weekNumber,
+        string groupName,
+        CancellationToken ct = default)
     {
         List<string> weeklyClassesList = new();
 
+        ct.ThrowIfCancellationRequested();
+
         var jToken = await _retryPolicy
-            .ExecuteAsync( () => GetJsomFromPage(page, weekNumber, groupName));
+            .ExecuteAsync((ct) => GetJsomFromPage(page, weekNumber, groupName, ct), ct);
 
         if (jToken.ToString() == "")
-        {
             return weeklyClassesList;
-        }
 
         foreach (var classInfo in jToken)
         {
@@ -179,32 +171,41 @@ public class JsScheduleParser : IScheduleParser
 
         return weeklyClassesList;
     }
-    private async Task<List<WeeklyClassesWrapper>> ParsePageContent(IPage page, int weekCountToParse, string groupName)
+    private async Task<List<WeeklyClassesWrapper>> ParsePageContent(
+        IPage page,
+        int weekCountToParse,
+        string groupName,
+        CancellationToken ct = default)
     {
         var allWeeklyClasses = new List<WeeklyClassesWrapper>();
 
-        for (int i = 1; i <= weekCountToParse; i++)
+        try
         {
-            int weekNumber = DateTime.Now.GetWeekNumber() + i - 1;
+            for (int i = 1; i <= weekCountToParse; i++)
+            {
+                int weekNumber = DateTime.Now.GetWeekNumber() + i - 1;
 
-            WeeklyClassesWrapper weeklyClassesWrapper = new();
+                ct.ThrowIfCancellationRequested();
 
-            var weeklyClassesList = await GetJsonAndParse(page, weekNumber, groupName);
+                var weeklyClassesList = await GetJsonAndParse(page, weekNumber, groupName);
 
-            weeklyClassesWrapper.WeeklyClasses = weeklyClassesList;
-            weeklyClassesWrapper.WeekNumber = weekNumber;
+                var weeklyClassesWrapper = new WeeklyClassesWrapper(weeklyClassesList, weekNumber);
 
-            allWeeklyClasses.Add(weeklyClassesWrapper);
+                allWeeklyClasses.Add(weeklyClassesWrapper);
+            }
         }
-
-        await page.CloseAsync();
+        finally
+        {
+            await page.CloseAsync();
+        }
 
         return allWeeklyClasses;
     }
 
     public async Task<List<WeeklyClassesWrapper>> LoadPageContentAndParse(
         int weekCountToParse,
-        ReaGroup reaGroup)
+        ReaGroup reaGroup,
+        CancellationToken ct = default)
     {
         IPage? page = null;
 
@@ -212,7 +213,17 @@ public class JsScheduleParser : IScheduleParser
 
         try
         {
-            page = await LoadPageContent(url);
+            page = await LoadPageContent(url, ct);
+        }
+        catch(Exception ex) when (ex is OperationCanceledException || ex is TaskCanceledException)
+        {
+            _logger.LogWarning(
+                ex,
+                "{exName} has been thrown during {task} " +
+                "due to Timeout or CancellationToken requested",
+                ex.GetType().Name,
+                nameof(LoadPageContentAndParse));
+            throw;
         }
         catch(Exception ex)
         {
@@ -221,21 +232,24 @@ public class JsScheduleParser : IScheduleParser
                 "{exName} has been thrown during {task}",
                 ex.GetType().Name,
                 nameof(LoadPageContentAndParse));
+            throw;
         }
 
-        Debug.Assert(page != null, "[JsScheduleParser] could not download page content");
+        ArgumentNullException.ThrowIfNull(page);
 
-        var result = await ParsePageContent(page, weekCountToParse, reaGroup.GroupName);
+        ct.ThrowIfCancellationRequested();
+
+        var result = await ParsePageContent(page, weekCountToParse, reaGroup.GroupName, ct);
 
         return result;
     }
 
-    public async Task<bool> CheckForGroupExistance(string groupName)
+    public async Task<bool> CheckForGroupExistance(string groupName, CancellationToken ct = default)
     {
         var url = _reaWebsiteLink + "?q=" + groupName.Replace("/", "%2F");
 
         if (!_browserWrapper.IsInit)
-            await _browserWrapper.InitAsync(CancellationToken.None);
+            await _browserWrapper.InitAsync(ct);
 
         ArgumentNullException.ThrowIfNull(_browserWrapper.Browser);
 
@@ -253,11 +267,11 @@ public class JsScheduleParser : IScheduleParser
         return exists;
     }
 
-    private async Task<IPage> LoadPageContent(string url)
+    private async Task<IPage> LoadPageContent(string url, CancellationToken ct)
     {
 
         if (!_browserWrapper.IsInit)
-            await _browserWrapper.InitAsync(CancellationToken.None);
+            await _browserWrapper.InitAsync(ct);
 
         ArgumentNullException.ThrowIfNull(_browserWrapper.Browser);
 
@@ -268,8 +282,6 @@ public class JsScheduleParser : IScheduleParser
         await page.WaitForNavigationAsync(_navigationOptions);
 
         return page;
-        
-
 
     }
 }

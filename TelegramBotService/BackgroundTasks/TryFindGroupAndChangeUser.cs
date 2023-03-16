@@ -58,6 +58,7 @@ public class TryFindGroupAndChangeUser : IInvocable, IInvocableWithPayload<Messa
         var groupAsString = Payload.Message.Text != null
             ? Payload.Message.Text.Replace("/change", "")
             : string.Empty;
+        groupAsString.Trim();
 
         bool groupExists = false;
 
@@ -80,7 +81,7 @@ public class TryFindGroupAndChangeUser : IInvocable, IInvocableWithPayload<Messa
                 .CreateNewReaGroup(groupAsString);
 
             var updatedGroup = await _parserPipeline
-                .ParseAndUpdate(group);
+                .ParseAndUpdate(group, ct: default);
 
             if(updatedGroup.ScheduleWeeks is null)
             {

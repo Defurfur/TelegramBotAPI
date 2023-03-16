@@ -11,9 +11,9 @@ public class StartMessageChainMember : AbstractMessageChainMember
     public override ICommand<ICommandArgs, Task<Message>>? Handle(ICommandArgs args)
     {
         bool condition =
-            args.User == null &&
-            args.OperationType == OperationType.StartCommand &&
-            args.Update.Message != null;
+            args.User == null
+            && args.OperationType == OperationType.StartCommand
+            && args.Update.Message != null;
 
         if (condition)
             return new ShowStartMessageCommand(args);

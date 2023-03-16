@@ -71,10 +71,11 @@ namespace ScheduleUpdateService.Services
         public List<ScheduleWeek> CreateMany(List<WeeklyClassesWrapper> weeklyClassesList)
         {
             var scheduleWeeks = new List<ScheduleWeek>();
+            ScheduleWeek scheduleWeek;
 
             foreach (var weeklyClassesWrapper in weeklyClassesList)
             {
-                var scheduleWeek = CreateInstance(weeklyClassesWrapper);
+                scheduleWeek = CreateInstance(weeklyClassesWrapper);
                 scheduleWeeks.Add(scheduleWeek);
             }
 

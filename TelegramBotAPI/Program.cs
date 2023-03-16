@@ -20,13 +20,16 @@ using TelegramBotService;
 using TelegramBotService.Abstractions;
 using TelegramBotService.BackgroundTasks;
 using TelegramBotService.Services;
+using FluentCommandHandler;
+using Telegram.Bot.Types;
+using TelegramBotService.Models;
+using TelegramBotService.Commands;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddUserSecrets<Program>();
 
 var botConfig = builder.Configuration.GetSection("BotConfiguration").Get<BotConfiguration>();
 var botToken = botConfig?.BotToken ?? string.Empty;
-
 builder.Logging.AddEventLog();
 
 builder.Services.AddHostedService<ConfigureWebhook>();
@@ -73,8 +76,126 @@ builder.Services.AddTransient<SendWeeklyScheduleEveningJob>();
 
 builder.Services.AddTransient<UpdateGroupsScheduleJob>();
 builder.Services.AddTransient<GlobalErrorHandlerMiddleware>();
+builder.Services.AddFluentCommandHandler<ICommandArgs, ICommand<ICommandArgs, Task<Message>>>(options => 
+    {
+        options
+            .AddRule(args =>
+                   args.User != null
+                && args.Callback != null
+                && args.Callback.Data != null
+                && args.CallbackMessageUpdater != null
+                && args.OperationType == OperationType.SwitchWeekCallback
+                && args.ScheduleLoader != null)
+            .ForCommand(args => new SwitchWeekCallbackCommand(args));
+
+        options
+            .AddRule(args =>
+                   args.User != null
+                && args.User.SubscriptionSettings == null
+                && args.Callback != null
+                && args.Callback.Data == "Enable Subscription"
+                && args.CallbackMessageUpdater != null
+                && args.UserUpdater != null)
+            .ForCommand(args => new CreateSettingsCallbackCommand(args));
+
+        options
+            .AddRule(args =>
+                   args.User != null
+                && args.User.SubscriptionSettings != null
+                && args.Callback != null
+                && args.Callback.Data == "Enable Subscription"
+                && args.CallbackMessageUpdater != null
+                && args.UserUpdater != null)
+            .ForCommand(args => new EnableSubscriptionCommand(args));
+
+        options
+            .AddRule(args =>
+                   args.User != null
+                && args.User.SubscriptionSettings != null
+                && args.Callback != null
+                && args.Callback.Data == "Disable Subscription"
+                && args.CallbackMessageUpdater != null
+                && args.UserUpdater != null)
+            .ForCommand(args => new DisableSubscriptionCommand(args));
+
+        options
+            .AddRule(args =>
+                   args.User != null
+                && args.User.SubscriptionSettings != null
+                && args.Callback != null
+                && args.Callback.Data != null
+                && args.CallbackMessageUpdater != null
+                && args.UserUpdater != null)
+            .ForCommand(args => new ProcessCallbackCommand(args));
+
+        options
+            .AddRule(args =>
+                   args.User != null
+                && args.OperationType == OperationType.GroupChangeCommand
+                && args.Update.Message != null)
+            .ForCommand(args => new TryChangeGroupCommand(args));
+
+        options
+            .AddRule(args =>
+                  args.Update.Message != null
+               && args.User != null
+               && args.MessageSender != null
+               && args.OperationType == OperationType.ChangeSubscriptionSettingsRequest)
+            .ForCommand(args => new ChangeSubscriptionSettingsCommand(args));
+
+        options
+            .AddRule(args =>
+                  args.User != null
+               && args.OperationType == OperationType.StartCommand
+               && args.Update.Message != null)
+            .ForCommand(args => new StartWithUserExistsCommand(args));
+
+        options
+           .AddRule(args =>
+                  args.User == null
+               && args.OperationType == OperationType.StartCommand
+               && args.Update.Message != null)
+           .ForCommand(args => new ShowStartMessageCommand(args));
+
+
+        options
+            .AddRule(args => 
+                  args.OperationType        == OperationType.BugCommand
+               && args.Update.Message       != null
+               && args.ContextUpdateService != null)
+            .ForCommand(args => new BugCommand(args));
+
+        options
+           .AddRule(args =>
+                  args.User == null
+               && args.OperationType == OperationType.Other
+               && args.Update.Message != null)
+           .ForCommand(args => new InvalidGroupInputCommand(args));
+
+        options
+            .AddRule(args =>
+                  args.User           == null
+               && args.OperationType  == OperationType.GroupInput
+               && args.Update.Message != null)
+            .ForCommand(args => new TryGetGroupCommand(args));
+
+        options
+            .AddRule(args =>
+                  args.User           != null
+               && args.OperationType  == OperationType.DownloadScheduleRequest
+               && args.ScheduleLoader != null)
+            .ForCommand(args => new DownloadScheduleCommand(args));
+
+        options
+            .AddRule(args =>
+                  args.User             != null
+               && args.OperationType    == OperationType.ChangeGroupButtonPressed)
+            .ForCommand(args => new ChangeGroupButtonCommand(args));
+
+    });
 
 var app = builder.Build();
+
 
 app.Services.UseScheduler(scheduler =>
 {
@@ -108,34 +229,9 @@ app.Services.UseScheduler(scheduler =>
     scheduler
         .Schedule<UpdateGroupsScheduleJob>()
         .Hourly()
-        .PreventOverlapping("Updater")
-        .RunOnceAtStart();
-    //scheduler
-    //    .Schedule<UpdateGroupsScheduleJob>()
-    //    .EveryTenMinutes()
-    //    //.DailyAtHour(10)
-    //    .PreventOverlapping("Updater")
-    //    .RunOnceAtStart();
-    //scheduler
-    //    .Schedule<UpdateGroupsScheduleJob>()
-    //    .DailyAtHour(14)
-    //    .PreventOverlapping("Updater");
-    //scheduler
-    //    .Schedule<UpdateGroupsScheduleJob>()
-    //    .DailyAtHour(18)
-    //    .PreventOverlapping("Updater");
-    //scheduler
-    //    .Schedule<UpdateGroupsScheduleJob>()
-    //    .DailyAtHour(22)
-    //    .PreventOverlapping("Updater");
-    //scheduler
-    //    .Schedule<UpdateGroupsScheduleJob>()
-    //    .DailyAtHour(2)
-    //    .PreventOverlapping("Updater");
-    //scheduler
-    //    .Schedule<UpdateGroupsScheduleJob>()
-    //    .DailyAtHour(6)
-    //    .PreventOverlapping("Updater");
+        .PreventOverlapping("Updater");
+        //.RunOnceAtStart();
+
 
 });
 
@@ -144,7 +240,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
 app.UseHttpsRedirection();
 app.UseHttpLogging();
 //app.UseMiddleware<GlobalErrorHandlerMiddleware>();

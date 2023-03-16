@@ -22,7 +22,6 @@ public static class ChainStorage
         new GroupInputTrueChainMember(),
         new DownloadScheduleChainMember(),
         new ChangeGroupButtonChainMember(),
-        new ChangeSubscriptionSettingsChainMember(),
     };
 
     public static List<IChainMember<ICommandArgs, Task<Message>>> ChainMembers { get => _chainMembers; }
