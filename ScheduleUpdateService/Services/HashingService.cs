@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using ScheduleUpdateService.Abstractions;
 using System.Reflection;
@@ -12,7 +13,8 @@ namespace ScheduleUpdateService.Services
         public string _hashingData = string.Empty;
         private readonly JsonSerializerSettings _serializerSettings;
         private readonly MD5CryptoServiceProvider _MD5ServiceProvider;
-        public HashingService()
+        private readonly ILogger<HashingService> _logger;
+        public HashingService(ILogger<HashingService> logger)
         {
             _serializerSettings = new JsonSerializerSettings()
             {
@@ -20,6 +22,7 @@ namespace ScheduleUpdateService.Services
             };
 
             _MD5ServiceProvider = new MD5CryptoServiceProvider();
+            _logger = logger;
         }
         private void GetHashingStringByJSON<T>(T tObject)
         {
@@ -48,12 +51,22 @@ namespace ScheduleUpdateService.Services
 
         protected override JsonProperty CreateProperty(MemberInfo member, MemberSerialization memberSerialization)
         {
-            JsonProperty property = base.CreateProperty(member, memberSerialization);
-            if (_ignoreProps.Contains(property.PropertyName))
+            try
             {
-                property.ShouldSerialize = _ => false;
+                JsonProperty property = base.CreateProperty(member, memberSerialization);
+                if (_ignoreProps.Contains(property.PropertyName))
+                {
+                    property.ShouldSerialize = _ => false;
+                }
+                return property;
             }
-            return property;
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.GetType().Name);
+            }
+
+            return default;
+
         }
     }
 

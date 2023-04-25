@@ -9,8 +9,9 @@ namespace ScheduleUpdateService.Abstractions
 {
     public interface IBrowserWrapper : IAsyncDisposable
     {
-        public Browser? Browser { get; set; }
-        bool IsInit { get; set; }
-        Task Init();
+        public IBrowser? Browser { get;}
+        bool IsInit { get;}
+        bool IsBeingInitialized { get;}
+        ValueTask InitAsync(CancellationToken ct);
     }
 }

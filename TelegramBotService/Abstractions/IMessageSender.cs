@@ -18,4 +18,5 @@ public interface IMessageSender
     Task<Message> DownloadScheduleMessageWithKeyboard(Message message, string text);
     Task<Message> SendMessageWithSomeText(long chatId, string text);
     Task<Message> SendSubscriptionSettings(SubscriptionSettings settings, Message message, bool subscriptionEnabled);
+    Task<Message> SendDefaultKeyboard(Message message);
 }

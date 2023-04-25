@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using FluentCommandHandler;
+using Microsoft.EntityFrameworkCore.Query.Internal;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
@@ -12,16 +14,16 @@ public class HandleUpdateService
 {
     private readonly ILogger<HandleUpdateService> _logger;
     private readonly IArgumentExtractorService _argumentExtractor;
-    private readonly ISpecificChainFactory _chainFactory;
+    private readonly IFluentCommandHandler<ICommandArgs,ICommand<ICommandArgs, Task<Message>>> _handler;
 
     public HandleUpdateService(
         ILogger<HandleUpdateService> logger,
         IArgumentExtractorService argumentExtractor,
-        ISpecificChainFactory chainFactory)
+        IFluentCommandHandler<ICommandArgs, ICommand<ICommandArgs, Task<Message>>> handler)
     {
         _logger = logger;
         _argumentExtractor = argumentExtractor;
-        _chainFactory = chainFactory;
+        _handler = handler;
     }
 
     public async Task EchoAsync(Update update)
@@ -34,13 +36,7 @@ public class HandleUpdateService
 
         var args = _argumentExtractor.GetArgs(update);
 
-        var chainMembers = ChainStorage.ChainMembers;
-
-        _chainFactory.CreateChain(chainMembers);
-
-        var command = _chainFactory
-            .GetFirstMember()!
-            .Handle(args);
+        var command = await _handler.Process(args);
 
         try
         {

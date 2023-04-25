@@ -30,6 +30,7 @@ namespace ScheduleUpdateService.Extensions
             services.Add(new ServiceDescriptor(typeof(IScheduleParser), typeof(JsScheduleParser), lifetime));
             services.Add(new ServiceDescriptor(typeof(IScheduleWeekFactory), typeof(ScheduleWeekFactory), lifetime));
             services.Add(new ServiceDescriptor(typeof(IParserPipeline), typeof(ParserPipeline), lifetime));
+            services.Add(new ServiceDescriptor(typeof(IChromiumKiller), typeof(ChromiumKiller), lifetime));
             return services;
         }
     }

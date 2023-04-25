@@ -8,7 +8,6 @@ namespace ScheduleUpdateService.Services
     public class ScheduleWeekFactory : IScheduleWeekFactory
     {
         private readonly IReaClassFactory _reaClassFactory;
-        private List<string> _processingClassInfoArray = new();
         private readonly Regex _dayOfWeekRE = new(@"(понедельник|вторник|среда|четверг|пятница|суббота)");
         private readonly Regex _dateRE = 
             new(@"\d{1,2}\s*(марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря|января|февраля)\s*\d{4}");
@@ -17,17 +16,23 @@ namespace ScheduleUpdateService.Services
         {
             _reaClassFactory = reaClassFactory;
         }
-        private void FillScheduleDay(ScheduleDay scheduleDay, int weekNumber)
+        private void FillScheduleDay(ScheduleDay scheduleDay, List<string> processList, int weekNumber)
         {
 
-            var sortedClassInfoArray = _processingClassInfoArray!
+            var sortedClassInfoArray = processList!
                 .Where(x => _dayOfWeekRE.Match(x).Value == scheduleDay.DayOfWeekName)
                 .ToList();
 
             if (sortedClassInfoArray is null || !sortedClassInfoArray.Any())
             {
+                var now = DateTime.Now;
+
+                int year = 9 <= now.Month && now.Month <= 12 
+                    ? now.Year 
+                    : now.Year - 1;
+
                 scheduleDay.Date = DateTimeExtension
-                    .GetMondayByWeekNumber(weekNumber)
+                    .GetMondayByWeekNumber(weekNumber, year)
                     .GetDateByDayOfWeek(scheduleDay.DayOfWeekName);
             }
             else
@@ -38,7 +43,7 @@ namespace ScheduleUpdateService.Services
                 scheduleDay.Date = DateTimeExtension.GetDate(firstClassDateAsString);
                 scheduleDay.ReaClasses = _reaClassFactory.CreateFromList(sortedClassInfoArray!);
 
-                _processingClassInfoArray.RemoveAll(x => sortedClassInfoArray!.Contains(x));
+                processList.RemoveAll(x => sortedClassInfoArray!.Contains(x));
             }
 
 
@@ -47,13 +52,14 @@ namespace ScheduleUpdateService.Services
         {
 
             var scheduleWeek = new ScheduleWeek(createDefaultScheduleDays: true);
-            _processingClassInfoArray = weeklyClassesWrapper.WeeklyClasses;
 
-            if (_processingClassInfoArray is null)
+            var processingClassInfoArray = weeklyClassesWrapper.WeeklyClasses;
+
+            if (processingClassInfoArray is null)
                 return scheduleWeek;
 
             foreach (ScheduleDay scheduleDay in scheduleWeek.GetScheduleDays())
-                FillScheduleDay(scheduleDay, weeklyClassesWrapper.WeekNumber);
+                FillScheduleDay(scheduleDay, processingClassInfoArray, weeklyClassesWrapper.WeekNumber);
 
             scheduleWeek.WeekStart = scheduleWeek.Monday.Date;
             scheduleWeek.WeekEnd = scheduleWeek.Saturday.Date.AddDays(1);
@@ -65,10 +71,11 @@ namespace ScheduleUpdateService.Services
         public List<ScheduleWeek> CreateMany(List<WeeklyClassesWrapper> weeklyClassesList)
         {
             var scheduleWeeks = new List<ScheduleWeek>();
+            ScheduleWeek scheduleWeek;
 
             foreach (var weeklyClassesWrapper in weeklyClassesList)
             {
-                var scheduleWeek = CreateInstance(weeklyClassesWrapper);
+                scheduleWeek = CreateInstance(weeklyClassesWrapper);
                 scheduleWeeks.Add(scheduleWeek);
             }
 

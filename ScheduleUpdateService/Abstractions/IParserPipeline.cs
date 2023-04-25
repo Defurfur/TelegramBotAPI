@@ -4,6 +4,7 @@ namespace ScheduleUpdateService.Abstractions;
 
 public interface IParserPipeline
 {
-    int WeekCountToParse { get; set; }
-    Task<ReaGroup> ParseAndUpdate(ReaGroup reaGroup);
+    int WeekCountToParse { get; }
+    Task<ReaGroup> ParseAndUpdate(ReaGroup reaGroup, CancellationToken ct = default);
+    void SetWeekCount(int weekCount);
 }

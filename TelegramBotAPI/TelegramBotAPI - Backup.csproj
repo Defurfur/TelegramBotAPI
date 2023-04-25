@@ -1,0 +1,98 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>d5f29818-7184-4e8a-a034-1ea915a7fbdb</UserSecretsId>
+  </PropertyGroup>
+	
+ <Target Name="UpdateWebConfigBeforeBuild" BeforeTargets="Build">
+	 <Message Text="Configuration: $(Configuration): web.dev.$(Configuration).config" />
+    <TransformXml Source="web.config" Transform="web.$(Configuration).config" Destination="web.config" />
+</Target>
+	
+ <ItemGroup>
+   <Compile Remove="Worker.cs" />
+ </ItemGroup>   
+	
+  <ItemGroup>
+    <Content Remove="web.Debug.config" />
+    <Content Remove="web.Release.config" />
+  </ItemGroup>   
+	
+  <ItemGroup>
+    <_WebToolingArtifacts Remove="Properties\PublishProfiles\Debug Profile.pubxml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="web.Release.config">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+    <None Include="web.Debug.config">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <Content Update="web.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+		
+
+  <ItemGroup>
+    <PackageReference Include="Coravel" Version="4.2.0" />
+    <PackageReference Include="Humanizer.Core" Version="2.14.1" />
+    <PackageReference Include="Humanizer.Core.ru" Version="2.14.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.2" />
+<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.2">
+  <PrivateAssets>all</PrivateAssets>
+  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+</PackageReference>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+    <PackageReference Include="Telegram.Bot" Version="18.0.0" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ReaSchedule.DAL\ReaSchedule.DAL.csproj" />
+    <ProjectReference Include="..\ScheduledActivities\ScheduledActivities.csproj" />
+    <ProjectReference Include="..\ScheduleUpdateService\ScheduleUpdateService.csproj" />
+    <ProjectReference Include="..\TelegramBotService\TelegramBotService.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="appsettings.Development.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>

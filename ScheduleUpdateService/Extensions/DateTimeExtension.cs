@@ -1,5 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using XAct;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ScheduleUpdateService.Extensions;
 
@@ -22,23 +23,41 @@ public static class DateTimeExtension
         {"ноябрь",  11 },
         {"декабрь", 12 },
     };
+    private static readonly Dictionary<string, int> _dayOfWeekDict = new()
+    {
+            {"понедельник", 1},
+            {"вторник",     2},
+            {"среда",       3},
+            {"четверг",     4},
+            {"пятница",     5},
+            {"суббота",     6},
+            {"воскресенье", 0},
+    };
     public static int GetWeekNumber(this DateTime dateTime)
     {
         DateOnly today = DateOnly.FromDateTime(dateTime);
         return today.GetWeekNumber();
 
     }
-
+    /// <summary>
+    /// Gets the number of the studying week in the university. Used on the schedule website.
+    /// </summary>
+    /// <param name="date"></param>
+    /// <returns></returns>
     public static int GetWeekNumber(this DateOnly date)
     {
-        DateOnly firstOfSeptember = new(date.Year, 9, 1);
+        // returns first of september - date of the start of the studying year
+        
+        DateOnly firstOfSeptember = 
+            date.Month >= 9 && date.Month <= 12
+            ? new(date.Year, 9, 1)
+            : new(date.Year - 1, 9, 1);
 
         var currentWeekStart = date.GetWeekStart();
+
         var firstWeekStart = firstOfSeptember.GetWeekStart();
 
-        TimeSpan timeSpan = currentWeekStart.ToDateTime(new TimeOnly())
-            - firstWeekStart.ToDateTime(new TimeOnly());
-        int weekNumber = timeSpan.Days / 7 + 1;
+        var weekNumber = (currentWeekStart.DayNumber - firstOfSeptember.DayNumber) / 7 + 2;
 
         return weekNumber;
 
@@ -47,7 +66,10 @@ public static class DateTimeExtension
     {
         int dateDayOfWeek = (int)date.DayOfWeek;
 
-        int dayDifference = dateDayOfWeek == 0 ? -6 : 1 - dateDayOfWeek;
+        int dayDifference = 
+            dateDayOfWeek == 0 
+            ? -6 
+            : 1 - dateDayOfWeek;
 
         var weekStartDate = date.AddDays(dayDifference);
 
@@ -59,7 +81,10 @@ public static class DateTimeExtension
     {
         int dateDayOfWeek = (int)date.DayOfWeek;
 
-        int dayDifference = dateDayOfWeek == 0 ? 0 : 7 - dateDayOfWeek;
+        int dayDifference = 
+            dateDayOfWeek == 0 
+            ? 0 
+            : 7 - dateDayOfWeek;
 
         var weekEndDate = date.AddDays(dayDifference);
 
@@ -69,36 +94,44 @@ public static class DateTimeExtension
 
     public static DateOnly GetDateByDayOfWeek(this DateOnly date, string ruDayOfWeekName)
     {
+        int inputDayOfWeek;
 
-        Dictionary<string, int> DayOfWeekDict = new()
+        ruDayOfWeekName = ruDayOfWeekName.ToLower().Trim();
+
+        inputDayOfWeek = ruDayOfWeekName switch
         {
-            {"понедельник", 1},
-            {"вторник",     2},
-            {"среда",       3},
-            {"четверг",     4},
-            {"пятница",     5},
-            {"суббота",     6},
-            {"воскресенье", 0},
+            "понедельник" => 1,
+            "вторник" => 2,
+            "среда" => 3,
+            "четверг" => 4,
+            "пятница" => 5,
+            "суббота" => 6,
+            "воскресенье" => 0,
+            _ => throw new ArgumentException("Invalid input", nameof(ruDayOfWeekName))
         };
 
-        if (DayOfWeekDict.TryGetValue(
-            ruDayOfWeekName.ToLower().Replace(" ", ""), out var inputDayOfWeek))
+        int dateDayOfWeek = (int)date.DayOfWeek;
+
+        //Case when both input and target dates are the same sunday
+        if(dateDayOfWeek == 0 & inputDayOfWeek == 0)
         {
+            return date;
+        };
 
-            int dateDayOfWeek = (int)date.DayOfWeek;
+        //Case when input date day of week is sunday
+        if(dateDayOfWeek == 0)
+        {
+            return date.AddDays(-(7 - inputDayOfWeek));
+        };
 
-            if (dateDayOfWeek == 0 & inputDayOfWeek == 0)
-                return date;
-            if (dateDayOfWeek == 0)
-                return date.AddDays(-(7 - inputDayOfWeek));
-            if (inputDayOfWeek == 0)
-                return date.AddDays(7 - dateDayOfWeek);
-            else
-                return date.AddDays(inputDayOfWeek - dateDayOfWeek);
-        }
-        else
-            return default;
+        //Case when method argument is "воскресенье"
+        if (inputDayOfWeek == 0)
+        {
+            return date.AddDays(7 - dateDayOfWeek);
+        };
 
+        //Other cases
+        return date.AddDays(inputDayOfWeek - dateDayOfWeek);
 
     }
 
@@ -119,6 +152,8 @@ public static class DateTimeExtension
 
         if (monthAsString.EndsWith('а'))
             monthAsString = monthAsString.Remove(monthAsString.Length - 1);
+        else if (monthAsString == "мая")
+            monthAsString = "май";
         else
             monthAsString = monthAsString.Remove(monthAsString.Length - 1, 1) + "ь";
 
@@ -132,9 +167,11 @@ public static class DateTimeExtension
     }
 
 
-    public static DateOnly GetMondayByWeekNumber(int weekNumber)
+    public static DateOnly GetMondayByWeekNumber(int weekNumber, int startYear)
     {
-        var firstOfSeptember = new DateOnly(DateTime.Now.Year, 9, 1);
+
+        DateOnly firstOfSeptember = new(startYear, 9, 1);
+
         var firstWeekMonday = firstOfSeptember.GetDateByDayOfWeek("понедельник");
 
         var outDate = firstWeekMonday.AddDays((weekNumber - 1) * 7);

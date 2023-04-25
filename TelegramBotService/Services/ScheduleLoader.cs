@@ -100,6 +100,10 @@ public class ScheduleLoader : IScheduleLoader
             ? _scheduleFormatter.Format(weekToFormat)
             : string.Empty;
 
+        var urlInBrackets = "(https://rasp.rea.ru/?q=" + group.GroupName.Replace("/", "%2F") + ")";
+
+        if(formattedSchedule != string.Empty)
+            formattedSchedule = formattedSchedule + "\r\n[Ссылка на расписание]" + urlInBrackets;
 
 
 

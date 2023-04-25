@@ -6,6 +6,6 @@ namespace TelegramBotService.Abstractions;
 
 public interface IGroupSearchPipeline
 {
-    Task<GroupSearchState> ExecuteAsync(Message message);
-    Task<GroupSearchState> ExecuteAsync(Message message, User user);
+    Task<GroupSearchState> RegisterUserAsync(Message message);
+    Task<GroupSearchState> ChangeUserGroupAsync(Message message, User user);
 }

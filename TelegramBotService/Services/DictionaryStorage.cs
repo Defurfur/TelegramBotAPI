@@ -54,4 +54,16 @@ public static class DictionaryStorage
          {"Send every week on", static (updater, data) => updater.UpdateWithWeekToSendKeyboard(data)},
          {"WeekToSend", static (updater, data) => updater.UpdateWithTimeOfDayKeyboard(data)},
      };
+
+    public static Dictionary<string, string> OrdinalNumberAndEmojiDict = new()
+    {
+        {"1 пара", "\u0031\u20E3 8:30 - 10:00" },
+        {"2 пара", "\u0032\u20E3 10:10 - 11:40" },
+        {"3 пара", "\u0033\u20E3 11:50 - 13:20" },
+        {"4 пара", "\u0034\u20E3 14:00 - 15:30" },
+        {"5 пара", "\u0035\u20E3 15:40 - 17:10" },
+        {"6 пара", "\u0036\u20E3 17:20 - 18:50" },
+        {"7 пара", "\u0037\u20E3 18:55 - 20:25" },
+        {"8 пара", "\u0038\u20E3 20:30 - 22:00" },
+    };
 }

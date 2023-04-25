@@ -20,7 +20,7 @@ public class TryChangeGroupCommand : ICommand<ICommandArgs, Task<Message>>
 
     public async Task<Message> ExecuteAsync()
     {
-        var groupHasBeenFound = await _groupSearchPipeline.ExecuteAsync(_message, _user);
+        var groupHasBeenFound = await _groupSearchPipeline.ChangeUserGroupAsync(_message, _user);
 
         var result = groupHasBeenFound switch
         {

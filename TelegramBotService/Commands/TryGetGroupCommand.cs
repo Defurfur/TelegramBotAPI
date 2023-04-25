@@ -18,7 +18,7 @@ public class TryGetGroupCommand : ICommand<ICommandArgs, Task<Message>>
 
     public async Task<Message> ExecuteAsync()
     {
-        var groupHasBeenFound = await _groupSearchPipeline.ExecuteAsync(_message);
+        var groupHasBeenFound = await _groupSearchPipeline.RegisterUserAsync(_message);
 
         var result = groupHasBeenFound switch
         {

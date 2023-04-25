@@ -15,13 +15,13 @@ public static class ChainStorage
         new ProcessCallbackChainMember(),
         new TryChangeGroupChainMember(),
         new ChangeSubscriptionSettingsChainMember(),
+        new StartWithUserExistsChainMember(),
         new StartMessageChainMember(),
         new BugChainMember(),
         new GroupInputFalseChainMember(),
         new GroupInputTrueChainMember(),
         new DownloadScheduleChainMember(),
         new ChangeGroupButtonChainMember(),
-        new ChangeSubscriptionSettingsChainMember(),
     };
 
     public static List<IChainMember<ICommandArgs, Task<Message>>> ChainMembers { get => _chainMembers; }
