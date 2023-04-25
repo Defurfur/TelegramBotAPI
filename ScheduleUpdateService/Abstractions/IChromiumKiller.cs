@@ -2,6 +2,6 @@
 {
     public interface IChromiumKiller
     {
-        void KillChromiumProcesses(string path = null, int timeout = 5000);
+        void KillChromiumProcesses(string path = "", int timeout = 5000);
     }
 }

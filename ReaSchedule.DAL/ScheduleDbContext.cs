@@ -52,6 +52,7 @@ public class ScheduleDbContext : DbContext
     public DbSet<User> Users { get; set; }
     public DbSet<SubscriptionSettings> Settings { get; set; }
     public DbSet<Bug> Bugs{ get; set; }
+    public DbSet<ScheduledTask> ScheduledTasks { get; set; }
 
 }
 

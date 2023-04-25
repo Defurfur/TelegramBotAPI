@@ -9,13 +9,6 @@ using System.Runtime.CompilerServices;
 
 namespace ScheduleUpdateService.Services;
 
-public enum ConfigSource
-{
-    All,
-    Debug,
-    Release
-}
-
 public class ChromiumKiller : IChromiumKiller
 {
     private readonly ILogger<ChromiumKiller> _logger;
@@ -23,14 +16,16 @@ public class ChromiumKiller : IChromiumKiller
     {
         _logger = logger;
     }
-    public void KillChromiumProcesses(string path = default, int timeout = 5000)
+    public void KillChromiumProcesses(string path = "", int timeout = 5000)
     {
         List<Process> processes = new();
 
         try
         {
+            _logger.LogWarning("[ChromiumKiller] Trying to kill processes associated with path: {Path}", path);
+
             processes =
-                path == default
+                path == ""
                 ? GetProcesses()
                 : GetProcesses(path);
 
@@ -39,20 +34,21 @@ public class ChromiumKiller : IChromiumKiller
         {
             if(_logger.IsEnabled(LogLevel.Information))
             {
-                _logger.LogInformation(
+                _logger.LogWarning(
                     win32ex,
-                    "Win32Exception has been thrown during while an attempt to KillChromiumProccesses with path = {path}",
+                    "[{this}] Win32Exception has been thrown during while an attempt to KillChromiumProccesses with path: {path}",
+                    GetType().Name,
                     path);
             };
         }
 
 
-        _logger.LogDebug("[ChromiumKiller] Starting process of killing chromiums. " +
-            "{chromiumCount} chromiums found.", processes.Count);
+        _logger.LogInformation("[{this}] Starting process of killing chromiums. " +
+            "{chromiumCount} chromiums found.", GetType().Name, processes.Count);
 
         if (!processes.Any())
         {
-            _logger.LogDebug("[ChromiumKiller] Found zero processes");
+            _logger.LogDebug("[{this}] Found zero processes", GetType().Name);
             return;
         }
 
@@ -80,22 +76,21 @@ public class ChromiumKiller : IChromiumKiller
                     }
                 }
             }
-            catch(Win32Exception winEx)
-            {
-                continue;
-            }
+            catch(Win32Exception) {}
             catch (Exception ex)
             {
                 _logger.LogError(
                     ex,
-                    "[ChromiumKiller] {exName} occured when trying to kill chrome process",
+                    "[{this}] {exName} occured when trying to kill chrome process",
+                    GetType().Name,
                     ex.GetType().Name);
             }
             finally
             {
                 stopwatch.Stop();
 
-                _logger.LogInformation("{processNumber} process killed within {elapsedTime}",
+                _logger.LogInformation("[{this}] {processNumber} process killed within {elapsedTime}",
+                    GetType().Name,
                     i + 1,
                     stopwatch.Elapsed.Humanize(2));
 
@@ -106,11 +101,39 @@ public class ChromiumKiller : IChromiumKiller
 
     private List<Process> GetProcesses(string path)
     {
-        var processes = Process
-               .GetProcessesByName("chrome")
-               .Where(x => x.MainModule?.FileName == path)
-               .ToList();
+        var chromiums = GetProcesses();
+        var processes = new List<Process>();
+        int failCounter = 0;
 
+        foreach(var process in chromiums)
+        {
+            try
+            {
+                if (process.MainModule?.FileName == path)
+                    processes.Add(process);
+            }
+            catch(Exception ex)
+            {
+                _logger.LogInformation(ex, "[ChromiumKiller] {ExceptionName} has been thrown when trying " +
+                    "to get MainModule of process with Id {ProcessID}",
+                    ex.GetType().Name,
+                    process);
+
+                failCounter++;
+            }
+        }
+
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            _logger.LogInformation("[{this}] Accessed {RecievedProcesses} out of " +
+                "{TotalProcesses} chromium processes with the given path: {Path}.\r\n" +
+                " {FailedProcesses} processes couldn't be accessed",
+                GetType().Name,
+                chromiums.Count - failCounter,
+                chromiums.Count,
+                path,
+                failCounter);
+        }
 
         return processes;
     }

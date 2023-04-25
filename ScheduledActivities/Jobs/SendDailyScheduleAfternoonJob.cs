@@ -12,6 +12,7 @@ namespace ScheduledActivities.Jobs
 {
     public class SendDailyScheduleAfternoonJob : AbstractDailyScheduleJob
     {
+        protected override Exception? Exception { get; set; }
         protected override ScheduleDbContext Context { get; set; }
         protected override IScheduleLoader Loader { get; set; }
         protected override IMessageSender Sender { get; set; }

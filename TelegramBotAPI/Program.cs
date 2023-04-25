@@ -24,13 +24,27 @@ using FluentCommandHandler;
 using Telegram.Bot.Types;
 using TelegramBotService.Models;
 using TelegramBotService.Commands;
+using Serilog;
+using Serilog.Formatting;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddUserSecrets<Program>();
 
-var botConfig = builder.Configuration.GetSection("BotConfiguration").Get<BotConfiguration>();
+var logWriter = new StreamWriter("logs.txt");
+Serilog.Debugging.SelfLog.Enable(logWriter);
+
+var botConfig = builder.Configuration
+    .GetSection("BotConfiguration")
+    .Get<BotConfiguration>();
+
 var botToken = botConfig?.BotToken ?? string.Empty;
-builder.Logging.AddEventLog();
+
+builder.Host.UseSerilog((context, configuration) =>
+{
+    configuration
+        .ReadFrom
+        .Configuration(context.Configuration);
+});
 
 builder.Services.AddHostedService<ConfigureWebhook>();
 builder.Services.AddEndpointsApiExplorer();
@@ -43,7 +57,7 @@ builder.Services.AddDbContext<ScheduleDbContext>(options =>
             options.UseSqlServer(
                 builder.Configuration.GetConnectionString("SQLServerExpress"),
                 x => x.MigrationsAssembly("ReaSchedule.DAL")),
-                ServiceLifetime.Scoped);
+            ServiceLifetime.Scoped);
 
 builder.Services.AddScoped<HandleUpdateService>();
 builder.Services.AddScoped<IContextUpdateService, ContextUpdateService>();
@@ -62,6 +76,7 @@ builder.Services.AddSingleton<IChromiumKiller, ChromiumKiller>();
 builder.Services.AddScheduleUpdateService(ServiceLifetime.Singleton);
 builder.Services.AddQueue();
 builder.Services.AddScheduler();
+
 
 builder.Services.AddTransient<TryFindGroupAndChangeUser>();
 builder.Services.AddTransient<TryFindGroupAndRegisterUser>();
@@ -229,8 +244,8 @@ app.Services.UseScheduler(scheduler =>
     scheduler
         .Schedule<UpdateGroupsScheduleJob>()
         .Hourly()
-        .PreventOverlapping("Updater");
-        //.RunOnceAtStart();
+        .PreventOverlapping("Updater")
+        .RunOnceAtStart();
 
 
 });
@@ -261,5 +276,7 @@ app.MapPost($"/bot/{botConfig.EscapedBotToken}", async (
     return Results.Ok();
 })
 .WithName("TelegramWebhook");
+
+app.Lifetime.ApplicationStopped.Register(() => logWriter.Dispose(), true);
 
 app.Run();

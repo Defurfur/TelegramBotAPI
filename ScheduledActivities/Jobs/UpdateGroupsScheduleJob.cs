@@ -11,20 +11,22 @@ using System.Text.Json.Serialization;
 using Polly;
 using XAct.Resources;
 using Polly.Wrap;
+using ReaSchedule.Models;
 
 namespace ScheduledActivities.Jobs;
 
-public class UpdateGroupsScheduleJob : IInvocable, IAsyncDisposable
+public class UpdateGroupsScheduleJob : IInvocable, IAsyncDisposable, IDisposable
 {
     private readonly IParserPipeline _parserPipeline;
     private readonly ScheduleDbContext _context;
     private readonly ILogger<UpdateGroupsScheduleJob> _logger;
     private readonly AsyncPolicyWrap _timeoutOnRetryPolicy;
-
+    private int _recievedGroupNumber;
     private bool _isStopped = false;
     private List<string> _updatedGroups = new();
     public CancellationTokenSource _ctSource = new();
     private int _updatedGroupCounter;
+    private Exception? Exception { get; set; }
 
     public UpdateGroupsScheduleJob(
         IParserPipeline parserPipeline,
@@ -44,9 +46,7 @@ public class UpdateGroupsScheduleJob : IInvocable, IAsyncDisposable
 
         _timeoutOnRetryPolicy = retryPolicy.WrapAsync(timeoutPerRetryPolicy);
     }
-    // What we need: 
-    // If a task was cancelled - we quit without retry
-    // If a task was cancelled due to timeout - we retry once
+
 
     public async Task Invoke()
     {
@@ -74,6 +74,8 @@ public class UpdateGroupsScheduleJob : IInvocable, IAsyncDisposable
                 ex.GetType().Name,
                 GetType().Name
                 );
+
+            Exception = ex;
         }
         finally
         {
@@ -85,12 +87,27 @@ public class UpdateGroupsScheduleJob : IInvocable, IAsyncDisposable
                 : "\r\n" + string.Join(",\r\n", _updatedGroups);
 
             stopwatch.Stop();
+
+            var log = $"[{GetType().Name}]{_updatedGroupCounter} groups' schedules have changed" +
+                $" and been updated in the database. Task took {stopwatch.Elapsed.Humanize(2)} to finish. \r\n" +
+                $"Updated groups: {updatedGroups}";
+
+            await SendTaskResult(
+                GetType().Name,
+                DateTime.Now,
+                _recievedGroupNumber,
+                _updatedGroupCounter,
+                log,
+                Exception,
+                (int)stopwatch.ElapsedMilliseconds);
+
             _logger.LogInformation("{UpdatedGroupsNumber} groups' schedules have changed" +
                 " and been updated in the database. Task took {Time} to finish. \r\n" +
                 "Updated groups: {updatedGroups}",
                 _updatedGroupCounter,
                 stopwatch.Elapsed.Humanize(2),
                 updatedGroups);
+
             _isStopped = true;
         }
 
@@ -109,15 +126,26 @@ public class UpdateGroupsScheduleJob : IInvocable, IAsyncDisposable
                     .ThenInclude(x => x.ReaClasses)
                     .AsSplitQuery()
                     .ToListAsync();
+        _recievedGroupNumber = reaGroupList.Count;
 
         _logger.LogInformation("Received {GroupCount} groups from database." +
             " Starting update process",
-            reaGroupList.Count);
+            _recievedGroupNumber);
 
         var tasks = reaGroupList
             .Select( x => _parserPipeline.ParseAndUpdate(x, ct));
 
-        var results = await Task.WhenAll(tasks);
+        ReaGroup[] results;
+
+        try
+        {
+            results = await Task.WhenAll(tasks);
+        }
+        catch(Exception ex)
+        {
+            _logger.LogError(ex, "{exName} has been thrown during an attempt to parse group schedules", ex.GetType().Name);
+            throw;
+        }
 
         var joinedGroups = reaGroupList.Join(
             results,
@@ -143,6 +171,32 @@ public class UpdateGroupsScheduleJob : IInvocable, IAsyncDisposable
         await _context.SaveChangesAsync(ct);
     }
 
+    private async Task SendTaskResult(
+         string taskName,
+         DateTime dateTime,
+         int entryNumber = 0,
+         int actionNumber = 0,
+         string message = "",
+         Exception? exception = null,
+         int elapsed = 0)
+    {
+        var scheduledTask = new ScheduledTask(
+            taskName,
+            dateTime,
+            message,
+            entryNumber,
+            actionNumber,
+            exception?.ToString() ?? "",
+            elapsed);
+
+        _context
+            .ScheduledTasks
+            .Add(scheduledTask);
+
+        await _context.SaveChangesAsync();
+    }
+
+
     public async ValueTask DisposeAsync()
     {
         int disposeTimeoutCounter = 50;
@@ -162,5 +216,14 @@ public class UpdateGroupsScheduleJob : IInvocable, IAsyncDisposable
         }
 
         _ctSource.Dispose();
+    }
+
+    public void Dispose()
+    {
+        if (!_isStopped)
+        {
+            _ctSource.Cancel();
+            _ctSource.Dispose();
+        }
     }
 }

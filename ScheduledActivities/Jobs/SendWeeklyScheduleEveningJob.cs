@@ -18,6 +18,8 @@ namespace ScheduledActivities.Jobs
         protected override ILogger<AbstractWeeklyScheduleJob> Logger { get; set; }
         protected override List<User>? Users { get; set; }
         protected override TimeOfDay TimeOfDay { get; set; } = TimeOfDay.Evening;
+        protected override Exception? Exception { get; set; }
+
 
         public SendWeeklyScheduleEveningJob(
             ScheduleDbContext context,

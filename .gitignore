@@ -450,3 +450,4 @@ FodyWeavers.xsd
 /ChromiumKiller
 /TelegramBotAPI/Middlewares
 /JoinedSchedule.sql
+/TelegramBotAPI/web.config

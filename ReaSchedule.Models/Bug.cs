@@ -13,5 +13,6 @@ public class Bug : IIdentifyable<int>
     public int UserId { get; set; } = 0;
     public long ChatId { get; set; }
     public string Text { get; set; } = string.Empty;
+    public bool Resolved { get; set; }
 
 }

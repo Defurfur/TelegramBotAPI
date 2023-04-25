@@ -21,6 +21,7 @@ namespace ScheduledActivities.Jobs;
 
 public abstract class AbstractWeeklyScheduleJob : IInvocable
 {
+    protected abstract Exception? Exception { get; set; }
     protected abstract ScheduleDbContext Context { get; set; }
     protected abstract IScheduleLoader Loader { get; set; }
     protected abstract IMessageSender Sender { get; set; }
@@ -31,9 +32,21 @@ public abstract class AbstractWeeklyScheduleJob : IInvocable
 
     public async Task Invoke()
     {
-        Logger.LogDebug("{Task} with param 'timeofDay' = '{timeOfDay}' has started",
-            GetType().Name,
-            TimeOfDay.Humanize());
+        if (TimeOfDay == TimeOfDay.NotSet)
+        {
+            var exception = new Exception($"[{GetType().Name}] Task not configured. TimeOfDay parameter is set to 'NotSet'");
+
+            await SendTaskResult(GetType().Name, DateTime.Now, exception: exception);
+
+            throw exception;
+        }
+
+        if (Logger.IsEnabled(LogLevel.Debug))
+        {
+            Logger.LogDebug("[{Task}] ScheduledTask with param 'timeofDay' = '{timeOfDay}' has started",
+                GetType().Name,
+                TimeOfDay.Humanize());
+        }
 
         var stopwatch = Stopwatch.StartNew();
 
@@ -43,25 +56,45 @@ public abstract class AbstractWeeklyScheduleJob : IInvocable
         }
         catch(Exception ex)
         {
-            Logger.LogError(ex, "{exception} was thrown", ex.GetType().Name);
+            Logger.LogError(
+                ex,
+                "[{This}] {Exception} was thrown during execution of a scheduled task",
+                GetType().Name,
+                ex.GetType().Name);
+
+            Exception = ex;
         }
         finally
         {
             stopwatch.Stop();
 
-            var loggingString = Users is null
+            var userInfoString = Users is null || !Users.Any()
                 ? "No users, whos settings satisfy task conditions have been found"
                 : $"{Users.Count} users have recieved schedule";
 
+            var log = $"[{GetType().Name}] ScheduledTask with " +
+                    $"TimeOfDay: {TimeOfDay.Humanize()}'  took {stopwatch.Elapsed.Humanize()} to finish."
+                    + userInfoString;
+
+            await SendTaskResult(
+                GetType().Name,
+                DateTime.Now,
+                Users?.Count ?? 0,
+                log,
+                Exception,
+                (int)stopwatch.ElapsedMilliseconds);
+
             Users = null;
 
-            Logger.LogInformation(
-                "[Metrics] {Task} with params " +
-                "'timeofDay' = '{timeOfDay}'  took {elapsedTime} to finish. {UserAmuntString}",
-                GetType().Name,
-                TimeOfDay.Humanize(),
-                stopwatch.Elapsed.Humanize(2),
-                loggingString);
+            if (Logger.IsEnabled(LogLevel.Information))
+            {
+                Logger.LogInformation("[{This}] ScheduledTask with " +
+                    "TimeOfDay: {TimeOfDay}'  took {Elapsed} to finish. {UserInfoString}",
+                    GetType().Name,
+                    TimeOfDay.Humanize(),
+                    stopwatch.Elapsed.Humanize(),
+                    userInfoString);
+            }
 
         }
               
@@ -101,10 +134,8 @@ public abstract class AbstractWeeklyScheduleJob : IInvocable
         ReaSchedule.Models.User user,
         WeekToSend weekToSend)
     {
-        if (weekToSend == WeekToSend.NotSet)
-            return;
-
-        var weekIndex = weekToSend == WeekToSend.CurrentWeek 
+        var weekIndex = 
+            weekToSend == WeekToSend.CurrentWeek 
             ? 0
             : 1;
 
@@ -113,4 +144,29 @@ public abstract class AbstractWeeklyScheduleJob : IInvocable
         await Sender.SendMessageWithSomeText(user.ChatId, formattedText);
 
     }
+
+    private protected async Task SendTaskResult(
+        string taskName,
+        DateTime dateTime,
+        int actionNumber = 0,
+        string message = "",
+        Exception? exception = null,
+        int elapsed = 0)
+    {
+        var scheduledTask = new ScheduledTask(
+            taskName,
+            dateTime,
+            message,
+            actionNumber,
+            actionNumber,
+            exception?.ToString() ?? "",
+            elapsed);
+
+        Context
+            .ScheduledTasks
+            .Add(scheduledTask);
+
+        await Context.SaveChangesAsync();
+    }
+
 }

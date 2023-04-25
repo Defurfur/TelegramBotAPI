@@ -13,6 +13,7 @@ namespace ScheduledActivities.Jobs
         protected override ILogger<AbstractDailyScheduleJob> Logger { get; set; }
         protected override List<User>? Users { get; set; }
         protected override TimeOfDay TimeOfDay { get; set; } = TimeOfDay.Evening;
+        protected override Exception? Exception { get; set; }
 
         public SendDailyScheduleEveningJob(
             ScheduleDbContext context,

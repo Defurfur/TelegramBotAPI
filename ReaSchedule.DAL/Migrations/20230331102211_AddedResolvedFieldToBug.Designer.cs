@@ -12,8 +12,8 @@ using ReaSchedule.DAL;
 namespace ReaSchedule.DAL.Migrations
 {
     [DbContext(typeof(ScheduleDbContext))]
-    [Migration("20230125131314_MadeNotNullFieldAtSubscriptionSettings")]
-    partial class MadeNotNullFieldAtSubscriptionSettings
+    [Migration("20230331102211_AddedResolvedFieldToBug")]
+    partial class AddedResolvedFieldToBug
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -35,6 +35,9 @@ namespace ReaSchedule.DAL.Migrations
 
                     b.Property<long>("ChatId")
                         .HasColumnType("bigint");
+
+                    b.Property<bool>("Resolved")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Text")
                         .IsRequired()
@@ -165,6 +168,43 @@ namespace ReaSchedule.DAL.Migrations
                     b.HasIndex("ReaGroupId");
 
                     b.ToTable("ScheduleWeeks");
+                });
+
+            modelBuilder.Entity("ReaSchedule.Models.ScheduledTask", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ActionNumber")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("DateTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Elapsed")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EntryNumber")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Exception")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TaskName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ScheduledTasks");
                 });
 
             modelBuilder.Entity("ReaSchedule.Models.SubscriptionSettings", b =>

@@ -1,13 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using PuppeteerSharp;
 using ScheduleUpdateService.Abstractions;
-using System.Diagnostics;
 using System.Net;
-using System.Xml.Linq;
-using XAct.Resources;
-using XSystem.Security.Cryptography;
 
 namespace ScheduleUpdateService.Services;
 
@@ -66,10 +61,17 @@ public class BrowserWrapper : IBrowserWrapper
             }
 
         }
+        catch (TaskCanceledException tcEx)
+        {
+            _logger.LogWarning(tcEx, "[BrowserWrapper] Didn't manage to initialize broser, because " +
+                "Cancellation Token has been requested");
+            throw;
+        }
         catch (Exception ex)
         {
 
             _logger.LogError(ex, "[BrowserWrapper] Didn't manage to initialize browser.");
+            throw;
         }
 
     }
@@ -101,14 +103,14 @@ public class BrowserWrapper : IBrowserWrapper
         }
         finally
         {
-            _chromiumKiller.KillChromiumProcesses(_chromiumPath);
+            _chromiumKiller.KillChromiumProcesses(_chromiumPath == string.Empty ? _defaultChromiumPath : _chromiumPath);
             IsInit = false;
         }
 
 
     }
 
-    private async ValueTask<bool> TryConnectToBrowserAsync(CancellationToken ct)
+    private async Task<bool> TryConnectToBrowserAsync(CancellationToken ct)
     {
         if (_webSocketEndpoint == string.Empty)
         {
@@ -127,6 +129,7 @@ public class BrowserWrapper : IBrowserWrapper
         }
         else
         {
+
             if (_chromiumPath == string.Empty)
                 _chromiumKiller.KillChromiumProcesses(_defaultChromiumPath);
             else
@@ -136,15 +139,15 @@ public class BrowserWrapper : IBrowserWrapper
         }
     }
     // Implement usage of defaultChromium instead of chromium path
-    private async ValueTask<bool> TryLaunchBrowser(CancellationToken ct)
+    private async Task<bool> TryLaunchBrowser(CancellationToken ct)
     {
+        if (await LaunchBrowser(ct, _defaultChromiumPath))
+        {
+            _webSocketEndpoint = Browser!.WebSocketEndpoint;
+            return Browser!.IsConnected;
+        }
 
-        var path = await DownloadChromiumIfNeeded(ct);
-
-        _chromiumPath = 
-            path == string.Empty
-            ? _defaultChromiumPath
-            : path;
+        _chromiumPath = await DownloadChromiumIfNeeded(ct);
 
         if (_chromiumPath == string.Empty)
             throw new ArgumentException("Could not get chromium executable path. " +
@@ -152,23 +155,39 @@ public class BrowserWrapper : IBrowserWrapper
 
         ct.ThrowIfCancellationRequested();
 
-        Browser = await Puppeteer.LaunchAsync(
-                         new LaunchOptions()
-                         {
-                             ExecutablePath = _chromiumPath,
-                             Timeout = 300000,
-                             Headless = true,
-                             Args = new string[]
-                             { "--no-zygote", "--no-sandbox", /*"--disable-dev-shm-usage",*/ 
-                                 "--single-process", }
-                         });
+        if (await LaunchBrowser(ct, _chromiumPath))
+        {
+            _webSocketEndpoint = Browser!.WebSocketEndpoint;
+            return Browser!.IsConnected;
+        }
 
-
+        return false;
+    }
+    private async Task<bool> LaunchBrowser(CancellationToken ct, string path)
+    {
         ct.ThrowIfCancellationRequested();
 
-        _webSocketEndpoint = Browser.WebSocketEndpoint;
+        try
+        {
+            Browser = await Puppeteer.LaunchAsync(
+                          new LaunchOptions()
+                          {
+                              ExecutablePath = path,
+                              Timeout = 300000,
+                              Headless = true,
+                              Args = new string[]
+                              { "--no-zygote", "--no-sandbox", /*"--disable-dev-shm-usage",*/ 
+                                     "--single-process", }
+                          });
+        }
+        catch(Exception ex)
+        {
+            _logger.LogError(ex, "[{this}] Failed to gracefully launch browser instance using this path: {Path}",
+                GetType().Name,
+                path);
+        }
 
-        return Browser.IsConnected;
+        return Browser?.IsConnected ?? false;
     }
     private async Task<string> DownloadChromiumIfNeeded(CancellationToken ct, IWebProxy? webProxy = null)
     {

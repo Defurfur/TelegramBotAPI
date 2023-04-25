@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ReaSchedule.DAL;
 
@@ -11,9 +12,11 @@ using ReaSchedule.DAL;
 namespace ReaSchedule.DAL.Migrations
 {
     [DbContext(typeof(ScheduleDbContext))]
-    partial class ScheduleDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230323170147_AddedElapsedFieldToScheduledTask")]
+    partial class AddedElapsedFieldToScheduledTask
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -32,9 +35,6 @@ namespace ReaSchedule.DAL.Migrations
 
                     b.Property<long>("ChatId")
                         .HasColumnType("bigint");
-
-                    b.Property<bool>("Resolved")
-                        .HasColumnType("bit");
 
                     b.Property<string>("Text")
                         .IsRequired()
