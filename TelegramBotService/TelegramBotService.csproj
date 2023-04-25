@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\FluentCommandHandler\FluentCommandHandler\FluentCommandHandler.csproj" />
+    <ProjectReference Include="..\FluentCommandHandler\FluentCommandHandler\FluentCommandHandler.csproj" />
     <ProjectReference Include="..\ReaSchedule.DAL\ReaSchedule.DAL.csproj" />
     <ProjectReference Include="..\ScheduleUpdateService\ScheduleUpdateService.csproj" />
   </ItemGroup>

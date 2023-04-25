@@ -15,7 +15,6 @@ using System.Diagnostics;
 using System.Text.Json.Serialization;
 using Telegram.Bot;
 using TelegramBotAPI;
-using TelegramBotAPI.Middlewares;
 using TelegramBotService;
 using TelegramBotService.Abstractions;
 using TelegramBotService.BackgroundTasks;
@@ -90,7 +89,6 @@ builder.Services.AddTransient<SendWeeklyScheduleAfternoonJob>();
 builder.Services.AddTransient<SendWeeklyScheduleEveningJob>();
 
 builder.Services.AddTransient<UpdateGroupsScheduleJob>();
-builder.Services.AddTransient<GlobalErrorHandlerMiddleware>();
 builder.Services.AddFluentCommandHandler<ICommandArgs, ICommand<ICommandArgs, Task<Message>>>(options => 
     {
         options

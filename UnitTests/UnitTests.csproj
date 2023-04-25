@@ -23,6 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\FluentCommandHandler\FluentCommandHandler\FluentCommandHandler.csproj" />
     <ProjectReference Include="..\ScheduleUpdateService\ScheduleUpdateService.csproj" />
     <ProjectReference Include="..\TelegramBotService\TelegramBotService.csproj" />
   </ItemGroup>
